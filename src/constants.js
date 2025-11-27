@@ -29,8 +29,8 @@ export const COLLISION_RADIUS_SQ = COLLISION_RADIUS * COLLISION_RADIUS;
 export const SHIELD_DURATION = 20000;       // ms (fallback timeout, mainly removed on hit)
 export const MULTIPLIER_DURATION = 15000;   // ms
 export const POWERUP_HEIGHT = 1.7;          // y height for powerups
-export const SHIELD_SPAWN_CHANCE = 0.015;   // 1.5% per spawn event
-export const MULTIPLIER_SPAWN_CHANCE = 0.010; // 1.0%
+export const SHIELD_SPAWN_CHANCE = 0.025;   // 2.5% per spawn event
+export const MULTIPLIER_SPAWN_CHANCE = 0.020; // 2.0%
 
 // Spawn spacing
 export const BASE_SPAWN_RATE = 60; // frames at easiest
@@ -91,3 +91,4 @@ export const COLOR_SCHEMES = [
   { floor: "#A010A0", fog: "#FF00FF" }, // 4
   { floor: "#B8860B", fog: "#FF8C00" }, // 5
 ];
+

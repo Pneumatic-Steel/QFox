@@ -131,8 +131,8 @@ export async function loadLeaderboard() {
 
     snap.forEach((docSnap, idx) => {
       const d = docSnap.data();
-      const initials = d.initials || "???";
-      const score = d.score || 0;
+      const initials = (d.initials || "???").toString().substring(0, 5);
+      const score = Number(d.score) || 0;
 
       // RANK ICONS
       let rankIcon = "";
@@ -236,3 +236,4 @@ export async function submitLeaderboardScore(score, initials) {
 }
 
 window.qfoxSubmitScore = submitLeaderboardScore;
+

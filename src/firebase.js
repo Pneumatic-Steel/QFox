@@ -66,13 +66,11 @@ export function initFirebase() {
 // =====================================================
 
 async function loadHighScore() {
-  // Load local fallback
   const local = localStorage.getItem(STORAGE_KEYS.HIGH_SCORE);
   if (local) {
     player.highScore = parseInt(local, 10) || 0;
   }
 
-  // Load cloud score
   try {
     const ref = doc(db, "users", user.uid);
     const snap = await getDoc(ref);
@@ -115,7 +113,7 @@ export async function saveHighScore(score) {
 }
 
 // =====================================================
-// LEADERBOARD — FIXED & UPGRADED
+// LEADERBOARD — FIXED (20/40/40 COLUMNS)
 // =====================================================
 
 export async function loadLeaderboard() {
@@ -171,6 +169,9 @@ export async function loadLeaderboard() {
           break;
       }
 
+      // =====================================================
+      // FIXED COLUMN WIDTHS (20% / 40% / 40%)
+      // =====================================================
       html += `
         <div class="lb-entry"
              style="
@@ -187,17 +188,17 @@ export async function loadLeaderboard() {
         >
 
           <span class="lb-rank"
-                style="width:10%; text-align:center; font-weight:900; font-size:1.2rem;">
+                style="width:20%; text-align:center; font-weight:900; font-size:1.2rem;">
             ${rankIcon}
           </span>
 
           <span class="lb-initials"
-                style="width:30%; color:${nameColor}; font-weight:800; font-size:1.1rem;">
+                style="width:40%; color:${nameColor}; font-weight:800; font-size:1.1rem;">
             ${initials}
           </span>
 
           <span class="lb-score"
-                style="width:30%; text-align:right; color:${scoreColor}; font-weight:900; font-size:1.2rem;">
+                style="width:40%; text-align:right; color:${scoreColor}; font-weight:900; font-size:1.2rem;">
             ${score.toLocaleString()}
           </span>
 
@@ -234,5 +235,4 @@ export async function submitLeaderboardScore(score, initials) {
   }
 }
 
-// So UI.js can call it without importing
 window.qfoxSubmitScore = submitLeaderboardScore;

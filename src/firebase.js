@@ -1,3 +1,7 @@
+// =====================================================
+// FIREBASE IMPORTS
+// =====================================================
+
 import { STORAGE_KEYS } from "./constants.js";
 import { player, savePlayerToStorage } from "./player.js";
 import { updateHighScoreLabel } from "./ui.js";
@@ -53,8 +57,8 @@ export function initFirebase() {
 
   onAuthStateChanged(auth, (firebaseUser) => {
     if (!firebaseUser) return;
-
     user = firebaseUser;
+
     console.log("Logged in as:", user.uid);
 
     loadHighScore();
@@ -76,7 +80,7 @@ async function loadHighScore() {
     const snap = await getDoc(ref);
 
     if (snap.exists()) {
-      const cloudScore = snap.data().highScore || 0;
+      const cloudScore = Number(snap.data().highScore) || 0;
       if (cloudScore > player.highScore) {
         player.highScore = cloudScore;
         localStorage.setItem(STORAGE_KEYS.HIGH_SCORE, cloudScore);
@@ -113,7 +117,7 @@ export async function saveHighScore(score) {
 }
 
 // =====================================================
-// LEADERBOARD — FIXED (20/40/40 COLUMNS)
+// LEADERBOARD (PATCHED – NO MORE NaN)
 // =====================================================
 
 export async function loadLeaderboard() {
@@ -131,17 +135,19 @@ export async function loadLeaderboard() {
 
     snap.forEach((docSnap, idx) => {
       const d = docSnap.data();
+
+      // SAFELY FIXED
       const initials = (d.initials || "???").toString().substring(0, 5);
       const score = Number(d.score) || 0;
 
-      // RANK ICONS
+      // RANK ICON
       let rankIcon = "";
       if (idx === 0)       rankIcon = "🔥";
       else if (idx === 1)  rankIcon = "🥈";
       else if (idx === 2)  rankIcon = "🥉";
       else                 rankIcon = idx + 1;
 
-      // COLORS & GLOW
+      // Colors & glow effects
       let rowGlow = "";
       let nameColor = "";
       let scoreColor = "";
@@ -169,9 +175,7 @@ export async function loadLeaderboard() {
           break;
       }
 
-      // =====================================================
-      // FIXED COLUMN WIDTHS (20% / 40% / 40%)
-      // =====================================================
+      // FINAL RENDER
       html += `
         <div class="lb-entry"
              style="
@@ -186,7 +190,6 @@ export async function loadLeaderboard() {
              onmouseover="this.style.boxShadow='${rowGlow}'"
              onmouseout="this.style.boxShadow='none'"
         >
-
           <span class="lb-rank"
                 style="width:20%; text-align:center; font-weight:900; font-size:1.2rem;">
             ${rankIcon}
@@ -201,7 +204,6 @@ export async function loadLeaderboard() {
                 style="width:40%; text-align:right; color:${scoreColor}; font-weight:900; font-size:1.2rem;">
             ${score.toLocaleString()}
           </span>
-
         </div>
       `;
     });
@@ -214,7 +216,7 @@ export async function loadLeaderboard() {
 }
 
 // =====================================================
-// SUBMIT SCORE TO LEADERBOARD
+// SUBMIT TO LEADERBOARD
 // =====================================================
 
 export async function submitLeaderboardScore(score, initials) {
@@ -224,7 +226,7 @@ export async function submitLeaderboardScore(score, initials) {
     const ref = collection(db, "leaderboard");
     await addDoc(ref, {
       initials,
-      score,
+      score: Number(score) || 0,
       uid: user.uid,
       timestamp: serverTimestamp(),
     });
@@ -236,5 +238,3 @@ export async function submitLeaderboardScore(score, initials) {
 }
 
 window.qfoxSubmitScore = submitLeaderboardScore;
-
-

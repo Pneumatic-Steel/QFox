@@ -1,6 +1,6 @@
 import { STORAGE_KEYS } from "./constants.js";
 import { player, savePlayerToStorage } from "./player.js";
-import { UI, updateScoreLabel, updateHighScoreLabel } from "./ui.js";
+import { updateHighScoreLabel } from "./ui.js";
 
 import {
   initializeApp
@@ -30,6 +30,10 @@ let db = null;
 let auth = null;
 let user = null;
 
+// =====================================================
+// INIT FIREBASE
+// =====================================================
+
 export function initFirebase() {
   const config = {
     apiKey: "AIzaSyBgfoQLeOOqbKBuM69SO88jhCpfwrz_koo",
@@ -57,9 +61,9 @@ export function initFirebase() {
   });
 }
 
-// -------------------------------------------------------------
-// HIGH SCORE SYNC
-// -------------------------------------------------------------
+// =====================================================
+// HIGH SCORE
+// =====================================================
 
 async function loadHighScore() {
   // Load local fallback
@@ -68,7 +72,7 @@ async function loadHighScore() {
     player.highScore = parseInt(local, 10) || 0;
   }
 
-  // Load from firebase
+  // Load cloud score
   try {
     const ref = doc(db, "users", user.uid);
     const snap = await getDoc(ref);
@@ -84,7 +88,6 @@ async function loadHighScore() {
     console.warn("Failed to fetch high score:", err);
   }
 
-  // Update HUD labels correctly
   updateHighScoreLabel();
 }
 
@@ -111,9 +114,9 @@ export async function saveHighScore(score) {
   }
 }
 
-// -------------------------------------------------------------
-// LEADERBOARD
-// -------------------------------------------------------------
+// =====================================================
+// LEADERBOARD — FIXED & UPGRADED
+// =====================================================
 
 export async function loadLeaderboard() {
   const listEl = document.getElementById("leaderboard-list");
@@ -133,12 +136,73 @@ export async function loadLeaderboard() {
       const initials = d.initials || "???";
       const score = d.score || 0;
 
+      // RANK ICONS
+      let rankIcon = "";
+      if (idx === 0)       rankIcon = "🔥";
+      else if (idx === 1)  rankIcon = "🥈";
+      else if (idx === 2)  rankIcon = "🥉";
+      else                 rankIcon = idx + 1;
+
+      // COLORS & GLOW
+      let rowGlow = "";
+      let nameColor = "";
+      let scoreColor = "";
+
+      switch (idx) {
+        case 0:
+          rowGlow = "0 0 14px rgba(255,165,0,0.75)";
+          nameColor = "#fbbf24";
+          scoreColor = "#fde68a";
+          break;
+        case 1:
+          rowGlow = "0 0 14px rgba(192,192,192,0.65)";
+          nameColor = "#d1d5db";
+          scoreColor = "#e5e7eb";
+          break;
+        case 2:
+          rowGlow = "0 0 14px rgba(205,127,50,0.65)";
+          nameColor = "#cd7f32";
+          scoreColor = "#f2c899";
+          break;
+        default:
+          rowGlow = "0 0 8px rgba(59,130,246,0.45)";
+          nameColor = "#93c5fd";
+          scoreColor = "#bfdbfe";
+          break;
+      }
+
       html += `
-        <div class="lb-entry">
-          <span class="lb-rank">${idx + 1}</span>
-          <span class="lb-initials">${initials}</span>
-          <span class="lb-score">${score.toLocaleString()}</span>
-        </div>`;
+        <div class="lb-entry"
+             style="
+               display:flex;
+               justify-content:space-between;
+               width:100%;
+               padding:10px 0;
+               border-bottom:1px dashed #334155;
+               transition:.25s;
+               text-shadow:0 0 4px rgba(0,0,0,0.6);
+             "
+             onmouseover="this.style.boxShadow='${rowGlow}'"
+             onmouseout="this.style.boxShadow='none'"
+        >
+
+          <span class="lb-rank"
+                style="width:10%; text-align:center; font-weight:900; font-size:1.2rem;">
+            ${rankIcon}
+          </span>
+
+          <span class="lb-initials"
+                style="width:30%; color:${nameColor}; font-weight:800; font-size:1.1rem;">
+            ${initials}
+          </span>
+
+          <span class="lb-score"
+                style="width:30%; text-align:right; color:${scoreColor}; font-weight:900; font-size:1.2rem;">
+            ${score.toLocaleString()}
+          </span>
+
+        </div>
+      `;
     });
 
     listEl.innerHTML = html || "Be the first to set a score!";
@@ -147,6 +211,10 @@ export async function loadLeaderboard() {
     listEl.innerHTML = "Failed to load leaderboard.";
   }
 }
+
+// =====================================================
+// SUBMIT SCORE TO LEADERBOARD
+// =====================================================
 
 export async function submitLeaderboardScore(score, initials) {
   if (!user || !db) return;
@@ -166,5 +234,5 @@ export async function submitLeaderboardScore(score, initials) {
   }
 }
 
-// Expose for UI without creating circular imports
+// So UI.js can call it without importing
 window.qfoxSubmitScore = submitLeaderboardScore;

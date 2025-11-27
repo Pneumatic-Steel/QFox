@@ -1,11 +1,11 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Quantum Fox</title>
 
-<!-- Tailwind for faster UI styling -->
+<!-- Tailwind -->
 <script src="https://cdn.tailwindcss.com"></script>
 
 <!-- THREE & TWEEN -->
@@ -17,12 +17,13 @@
         margin:0;
         overflow:hidden;
         background:#0d1117;
-        font-family: Inter, system-ui, Arial;
+        font-family:Inter,system-ui,Arial;
         color:#f3f4f6;
     }
+
     canvas { display:block; }
 
-    /* GLOBAL HIDDEN CLASS */
+    /* Hidden utility your JS uses */
     .hidden { display:none !important; }
 
     /* HUD */
@@ -64,9 +65,7 @@
         z-index:15;
     }
 
-    /* ==========================
-        MENU SCREEN
-       ========================== */
+    /* MENU SCREEN */
     #screen-menu {
         position:absolute;
         inset:0;
@@ -76,7 +75,7 @@
         flex-direction:column;
         justify-content:center;
         align-items:center;
-        gap:20px;
+        gap:22px;
     }
     .menu-button {
         background:#3b82f6;
@@ -87,20 +86,19 @@
         font-size:1.4rem;
         color:white;
         cursor:pointer;
-        transition:0.25s;
+        transition:.25s;
     }
     .menu-button:hover {
         background:#2563eb;
         transform:translateY(-2px);
     }
 
-    /* ==========================
-        GAME OVER SCREEN (NEW)
-       ========================== */
+    /* GAME OVER SCREEN */
     #screen-gameover {
         position:absolute;
         inset:0;
         background:rgba(0,0,0,0.88);
+        z-index:9999;
         display:flex;
         flex-direction:column;
         justify-content:center;
@@ -108,7 +106,7 @@
         text-align:center;
         opacity:0;
         transition:opacity .35s ease-in-out;
-        z-index:9999;
+        pointer-events:auto;
     }
 
     @keyframes pulse-border {
@@ -117,9 +115,7 @@
         100% { box-shadow:0 0 0 0 rgba(252,211,77,0); }
     }
 
-    /* ==========================
-        LEADERBOARD SCREEN
-       ========================== */
+    /* LEADERBOARD SCREEN */
     #screen-leaderboard {
         position:absolute;
         inset:0;
@@ -132,6 +128,7 @@
         overflow-y:auto;
         opacity:0;
         transition:opacity .3s ease-in-out;
+        pointer-events:auto;
     }
 
     .lb-entry {
@@ -150,9 +147,7 @@
         margin-bottom:12px;
     }
 
-    /* ==========================
-        TRAIL SHOP
-       ========================== */
+    /* TRAIL SHOP SCREEN */
     #screen-trails {
         position:absolute;
         inset:0;
@@ -164,7 +159,8 @@
         padding:40px 0;
         overflow-y:auto;
         opacity:0;
-        transition:opacity .25s;
+        transition:opacity .25s ease-in-out;
+        pointer-events:auto;
     }
 
     .trail-item {
@@ -192,21 +188,17 @@
 
 <div id="touch-indicator">Tap Left / Right to Switch Lanes</div>
 
-<!-- THREE Canvas Container -->
+<!-- THREE Scene -->
 <div id="game-container"></div>
 
-<!-- =======================================
-     MENU SCREEN
-======================================= -->
+<!-- MENU SCREEN -->
 <div id="screen-menu">
     <button id="btn-start" class="menu-button">START GAME</button>
     <button id="btn-leaderboard" class="menu-button">LEADERBOARD</button>
     <button id="btn-trails" class="menu-button">TRAIL SHOP</button>
 </div>
 
-<!-- =======================================
-     GAME OVER SCREEN (FULL NEW STYLE)
-======================================= -->
+<!-- GAME OVER SCREEN -->
 <div id="screen-gameover" class="hidden">
 
     <h1 style="
@@ -220,18 +212,15 @@
 
     <div style="font-size:1.45rem; font-weight:800; margin-bottom:20px;">
         Final Score:
-        <span id="label-finalscore" style="
-            color:#fbbf24;
-            font-size:2.3rem;
-            font-weight:900;
-            text-shadow:0 0 12px rgba(251,191,36,0.7);">
+        <span id="label-finalscore"
+              style="color:#fbbf24; font-size:2.3rem; font-weight:900; text-shadow:0 0 12px rgba(251,191,36,0.7);">
             0
         </span>
     </div>
 
-    <!-- INITIALS INPUT -->
+    <!-- Initials -->
     <div id="initials-container" class="hidden"
-        style="
+         style="
             display:flex;
             flex-direction:column;
             align-items:center;
@@ -241,91 +230,47 @@
             border:2px solid #fcd34d;
             margin-bottom:22px;
             animation:pulse-border 2s infinite;">
-         
+
         <div style="font-size:1.2rem; font-weight:800; color:#fcd34d; margin-bottom:10px;">
             NEW HIGH SCORE!
         </div>
 
         <input id="initials-input" maxlength="5" placeholder="_____"
-            style="
-                background:#111827;
-                border:2px solid #4b5563;
-                color:#10b981;
-                font-size:2.2rem;
-                text-align:center;
-                width:260px;
-                border-radius:8px;
-                margin-bottom:14px;
-                text-transform:uppercase;
-                font-family:monospace;
-                letter-spacing:0.18em;">
+               style="background:#111827; border:2px solid #4b5563; color:#10b981; font-size:2.2rem;
+                      text-align:center; width:260px; border-radius:8px; margin-bottom:14px;
+                      text-transform:uppercase; font-family:monospace; letter-spacing:0.18em;">
 
         <button id="btn-submit-score"
-            style="
-               background:#10b981;
-               color:#064e3b;
-               padding:10px 28px;
-               border-radius:8px;
-               font-weight:900;
-               font-size:1.25rem;
-               cursor:pointer;
-               border:none;
-               transition:all .2s;">
+                style="background:#10b981; color:#064e3b; padding:10px 28px; border-radius:8px;
+                       font-weight:900; font-size:1.25rem; cursor:pointer; border:none;">
             SUBMIT
         </button>
     </div>
 
-    <!-- BUTTON ROW -->
     <div style="display:flex; gap:20px;">
-
         <button id="btn-restart"
-            style="
-                padding:12px 24px;
-                background:#fcd34d;
-                color:#111827;
-                border-radius:10px;
-                border:none;
-                font-weight:900;
-                font-size:1.25rem;
-                cursor:pointer;
-                transition:all .2s;">
+                style="padding:12px 24px; background:#fcd34d; color:#111827;
+                       border-radius:10px; border:none; font-weight:900;
+                       font-size:1.25rem; cursor:pointer;">
             RESTART
         </button>
 
         <button id="btn-leaderboard-2"
-            style="
-                padding:12px 24px;
-                background:#3b82f6;
-                color:white;
-                border-radius:10px;
-                border:none;
-                font-weight:900;
-                font-size:1.25rem;
-                cursor:pointer;
-                transition:all .2s;">
+                style="padding:12px 24px; background:#3b82f6; color:white;
+                       border-radius:10px; border:none; font-weight:900;
+                       font-size:1.25rem; cursor:pointer;">
             LEADERBOARD
         </button>
     </div>
+
 </div>
 
-<!-- =======================================
-     LEADERBOARD SCREEN
-======================================= -->
+<!-- LEADERBOARD SCREEN -->
 <div id="screen-leaderboard">
-
-    <button id="btn-close-leaderboard" 
-        style="
-            position:absolute;
-            top:20px;
-            right:20px;
-            padding:10px 20px;
-            font-size:1.3rem;
-            background:#ef4444;
-            color:white;
-            border:none;
-            border-radius:10px;
-            font-weight:900;
-            cursor:pointer;">
+    <button id="btn-close-leaderboard"
+        style="position:absolute; top:20px; right:20px; padding:10px 20px;
+               background:#ef4444; color:white; border:none; border-radius:10px;
+               font-weight:900; font-size:1.2rem; cursor:pointer;">
         ✕ CLOSE
     </button>
 
@@ -333,15 +278,9 @@
         TOP 100 RUNNERS
     </h1>
 
-    <div style="
-        width:90%;
-        max-width:600px;
-        background:rgba(0,0,0,0.7);
-        padding:20px;
-        border-radius:10px;
-        border:2px solid #10b981;
-        max-height:70vh;
-        overflow-y:auto;">
+    <div style="width:90%; max-width:600px; background:rgba(0,0,0,0.7);
+                padding:20px; border-radius:10px; border:2px solid #10b981;
+                max-height:70vh; overflow-y:auto;">
 
         <div class="lb-entry lb-header">
             <span style="width:10%; text-align:center;">#</span>
@@ -350,27 +289,15 @@
         </div>
 
         <div id="leaderboard-list">Loading...</div>
-
     </div>
 </div>
 
-<!-- =======================================
-     TRAIL SHOP
-======================================= -->
+<!-- TRAIL SHOP SCREEN -->
 <div id="screen-trails">
-
     <button id="btn-close-trails"
-        style="
-            position:absolute;
-            top:20px;
-            right:20px;
-            background:#ef4444;
-            color:white;
-            font-weight:900;
-            border:none;
-            border-radius:10px;
-            padding:8px 16px;
-            font-size:1.1rem;">
+        style="position:absolute; top:20px; right:20px; background:#ef4444;
+               color:white; padding:8px 16px; border:none; border-radius:10px;
+               font-weight:900; font-size:1.1rem;">
         ✕ CLOSE
     </button>
 
@@ -379,10 +306,9 @@
     </h1>
 
     <div id="trail-list" style="width:300px;"></div>
-
 </div>
 
-<!-- GAME SCRIPTS -->
+<!-- JS FILES -->
 <script type="module" src="constants.js"></script>
 <script type="module" src="assets.js"></script>
 <script type="module" src="player.js"></script>

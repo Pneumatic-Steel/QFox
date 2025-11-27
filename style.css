@@ -133,34 +133,6 @@ button:hover {
 }
 
 /* ========================================
-   LEADERBOARD
-======================================== */
-
-#leaderboard-list {
-  border-radius: 8px;
-  border: 1px solid rgba(255,255,255,0.15);
-}
-
-.lb-entry {
-  display: grid;
-  grid-template-columns: 40px 1fr 100px;
-  padding: 10px 12px;
-  border-bottom: 1px solid rgba(255,255,255,0.1);
-}
-
-.lb-entry:last-child {
-  border-bottom: none;
-}
-
-.lb-rank {
-  opacity: 0.6;
-}
-
-.lb-initials {
-  font-weight: 600;
-}
-
-/* ========================================
    GAME OVER SCREEN
 ======================================== */
 
@@ -211,3 +183,4 @@ button:hover {
     padding: 4px 8px;
   }
 }
+

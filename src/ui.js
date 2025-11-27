@@ -122,19 +122,19 @@ export function initUI() {
 export function showMenu() {
   UI.state = GAME_STATE.MENU;
 
-  if (UI.screens.menu) UI.screens.menu.style.display = "flex";
-  if (UI.screens.gameOver) UI.screens.gameOver.style.display = "none";
-  if (UI.screens.leaderboard) UI.screens.leaderboard.style.display = "none";
-  if (UI.screens.trails) UI.screens.trails.style.display = "none";
+  if (UI.screens.menu) UI.screens.menu.classList.remove("hidden");
+  if (UI.screens.gameOver) UI.screens.gameOver.classList.add("hidden");
+  if (UI.screens.leaderboard) UI.screens.leaderboard.classList.add("hidden");
+  if (UI.screens.trails) UI.screens.trails.classList.add("hidden");
 }
 
 export function showGame() {
   UI.state = GAME_STATE.PLAYING;
 
-  if (UI.screens.menu) UI.screens.menu.style.display = "none";
-  if (UI.screens.gameOver) UI.screens.gameOver.style.display = "none";
-  if (UI.screens.leaderboard) UI.screens.leaderboard.style.display = "none";
-  if (UI.screens.trails) UI.screens.trails.style.display = "none";
+  if (UI.screens.menu) UI.screens.menu.classList.add("hidden");
+  if (UI.screens.gameOver) UI.screens.gameOver.classList.add("hidden");
+  if (UI.screens.leaderboard) UI.screens.leaderboard.classList.add("hidden");
+  if (UI.screens.trails) UI.screens.trails.classList.add("hidden");
 
   // hide initials box when starting
   if (UI.initials.container) UI.initials.container.classList.add("hidden");
@@ -171,26 +171,26 @@ export function showLeaderboard() {
   UI.state = GAME_STATE.LEADERBOARD;
 
   if (UI.screens.leaderboard)
-    UI.screens.leaderboard.style.display = "flex";
+    UI.screens.leaderboard.classList.remove("hidden");
 
   if (window.loadLeaderboard) window.loadLeaderboard();
 }
 
 export function hideLeaderboard() {
   if (UI.screens.leaderboard)
-    UI.screens.leaderboard.style.display = "none";
+    UI.screens.leaderboard.classList.add("hidden");
 
   UI.state = GAME_STATE.MENU;
 }
 
 export function showTrails() {
   UI.state = GAME_STATE.TRAILS;
-  if (UI.screens.trails) UI.screens.trails.style.display = "flex";
+  if (UI.screens.trails) UI.screens.trails.classList.remove("hidden");
   updateTrailList();
 }
 
 export function hideTrails() {
-  if (UI.screens.trails) UI.screens.trails.style.display = "none";
+  if (UI.screens.trails) UI.screens.trails.classList.add("hidden");
   UI.state = GAME_STATE.MENU;
 }
 
@@ -265,4 +265,3 @@ export function updateTrailList() {
     };
   });
 }
-

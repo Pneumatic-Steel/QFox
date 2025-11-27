@@ -144,6 +144,7 @@ export function showGame() {
 }
 
 export function showGameOver(finalScore) {
+  // FIXED — no () here
   UI.state = GAME_STATE.GAME_OVER;
 
   if (UI.labels.finalScore)
@@ -151,12 +152,11 @@ export function showGameOver(finalScore) {
 
   updateHighScoreLabel();
 
-  if (UI.screens.menu) UI.screens.menu.style.display = "none";
-  if (UI.screens.gameOver) UI.screens.gameOver.style.display = "flex";
-  if (UI.screens.leaderboard) UI.screens.leaderboard.style.display = "none";
-  if (UI.screens.trails) UI.screens.trails.style.display = "none";
+  if (UI.screens.menu) UI.screens.menu.classList.add("hidden");
+  if (UI.screens.gameOver) UI.screens.gameOver.classList.remove("hidden");
+  if (UI.screens.leaderboard) UI.screens.leaderboard.classList.add("hidden");
+  if (UI.screens.trails) UI.screens.trails.classList.add("hidden");
 
-  // always show initials prompt on game over (simpler for now)
   UI.initials.pendingScore = finalScore;
   if (UI.initials.container) {
     UI.initials.container.classList.remove("hidden");
@@ -265,3 +265,4 @@ export function updateTrailList() {
     };
   });
 }
+

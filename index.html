@@ -1,325 +1,306 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Quantum Fox</title>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Quantum Fox</title>
 
-<!-- Tailwind -->
-<script src="https://cdn.tailwindcss.com"></script>
+  <!-- Tailwind (for nice default styles, optional but handy) -->
+  <script src="https://cdn.tailwindcss.com"></script>
 
-<!-- THREE & TWEEN -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/tween.js/23.1.1/tween.umd.js"></script>
+  <!-- THREE & TWEEN (must load before your modules use THREE / TWEEN) -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/tween.js/23.1.1/tween.umd.js"></script>
 
-<style>
-    body {
-        margin:0;
-        overflow:hidden;
-        background:#0d1117;
-        font-family:Inter,system-ui,Arial;
-        color:#f3f4f6;
-    }
-
-    canvas { display:block; }
-
-    /* Hidden utility your JS uses */
-    .hidden { display:none !important; }
-
-    /* HUD */
-    #hud {
-        position:absolute;
-        top:0;
-        left:0;
-        right:0;
-        padding:10px 16px;
-        z-index:20;
-        display:flex;
-        justify-content:space-between;
-        pointer-events:none;
-        font-weight:700;
-    }
-    .hud-box {
-        background:rgba(0,0,0,0.7);
-        padding:8px 16px;
-        border-radius:8px;
-        border:2px solid #3b82f6;
-        font-size:1.1rem;
-        min-width:130px;
-        text-align:center;
-    }
-
-    /* TOUCH INDICATOR */
-    #touch-indicator {
-        position:absolute;
-        bottom:20px;
-        left:50%;
-        transform:translateX(-50%);
-        background:rgba(0,0,0,0.7);
-        border:2px solid #3b82f6;
-        color:#fcd34d;
-        padding:8px 16px;
-        border-radius:10px;
-        font-weight:700;
-        pointer-events:none;
-        z-index:15;
-    }
-
-    /* MENU SCREEN */
-    #screen-menu {
-        position:absolute;
-        inset:0;
-        background:rgba(0,0,0,0.85);
-        z-index:9999;
-        display:flex;
-        flex-direction:column;
-        justify-content:center;
-        align-items:center;
-        gap:22px;
-    }
-    .menu-button {
-        background:#3b82f6;
-        padding:14px 26px;
-        border:none;
-        border-radius:10px;
-        font-weight:900;
-        font-size:1.4rem;
-        color:white;
-        cursor:pointer;
-        transition:.25s;
-    }
-    .menu-button:hover {
-        background:#2563eb;
-        transform:translateY(-2px);
-    }
-
-    /* GAME OVER SCREEN */
-    #screen-gameover {
-        position:absolute;
-        inset:0;
-        background:rgba(0,0,0,0.88);
-        z-index:9999;
-        display:flex;
-        flex-direction:column;
-        justify-content:center;
-        align-items:center;
-        text-align:center;
-        opacity:0;
-        transition:opacity .35s ease-in-out;
-        pointer-events:auto;
-    }
-
-    @keyframes pulse-border {
-        0%   { box-shadow:0 0 0 0 rgba(252,211,77,0.4); }
-        60%  { box-shadow:0 0 0 12px rgba(252,211,77,0); }
-        100% { box-shadow:0 0 0 0 rgba(252,211,77,0); }
-    }
-
-    /* LEADERBOARD SCREEN */
-    #screen-leaderboard {
-        position:absolute;
-        inset:0;
-        background:rgba(0,0,0,0.92);
-        z-index:9999;
-        display:none;
-        flex-direction:column;
-        align-items:center;
-        padding-top:60px;
-        overflow-y:auto;
-        opacity:0;
-        transition:opacity .3s ease-in-out;
-        pointer-events:auto;
-    }
-
-    .lb-entry {
-        display:flex;
-        justify-content:space-between;
-        border-bottom:1px dashed #374151;
-        padding:8px 0;
-        width:100%;
-        font-size:1.1rem;
-    }
-    .lb-header {
-        font-weight:900;
-        font-size:1.3rem;
-        color:#fcd34d;
-        border-bottom:2px solid #fcd34d;
-        margin-bottom:12px;
-    }
-
-    /* TRAIL SHOP SCREEN */
-    #screen-trails {
-        position:absolute;
-        inset:0;
-        background:rgba(0,0,0,0.92);
-        z-index:9999;
-        display:none;
-        flex-direction:column;
-        align-items:center;
-        padding:40px 0;
-        overflow-y:auto;
-        opacity:0;
-        transition:opacity .25s ease-in-out;
-        pointer-events:auto;
-    }
-
-    .trail-item {
-        background:rgba(255,255,255,0.05);
-        border:2px solid #3b82f6;
-        padding:14px;
-        border-radius:10px;
-        margin-bottom:12px;
-        width:300px;
-        display:flex;
-        justify-content:space-between;
-        font-weight:700;
-    }
-</style>
+  <!-- Your custom CSS (defines .hidden, fonts, etc) -->
+  <link rel="stylesheet" href="style.css" />
 </head>
+<body class="bg-slate-900 text-slate-100">
 
-<body>
+  <!-- ============================= -->
+  <!-- HUD                          -->
+  <!-- ============================= -->
+  <div id="hud"
+       class="absolute top-0 left-0 right-0 flex justify-between p-3 z-20 pointer-events-none font-bold">
+    <div id="label-score" class="hud-box">
+      Score: 0
+    </div>
+    <div id="label-highscore" class="hud-box">
+      High Score: 0
+    </div>
+    <div class="hud-box text-sm">
+      A / D or Arrow Keys to Switch Lanes
+    </div>
+  </div>
 
-<!-- HUD -->
-<div id="hud">
-    <div id="label-score" class="hud-box">Score: 0</div>
-    <div id="label-highscore" class="hud-box">High Score: 0</div>
-    <div class="hud-box text-sm">A / D (or Arrows) to Switch Lanes</div>
-</div>
+  <!-- Touch hint -->
+  <div id="touch-indicator"
+       class="fixed bottom-5 left-1/2 -translate-x-1/2 px-4 py-2 rounded-lg border-2 border-blue-500 bg-black/70 text-amber-300 font-bold z-10 pointer-events-none">
+    Tap Left / Right to Switch Lanes
+  </div>
 
-<div id="touch-indicator">Tap Left / Right to Switch Lanes</div>
+  <!-- THREE.js canvas container -->
+  <div id="game-container"></div>
 
-<!-- THREE Scene -->
-<div id="game-container"></div>
+  <!-- ============================= -->
+  <!-- MAIN MENU SCREEN             -->
+  <!-- ============================= -->
+  <!-- IMPORTANT: no "hidden" on this; UI shows/hides with style.display -->
+  <div id="screen-menu"
+       class="absolute inset-0 bg-black/85 flex flex-col items-center justify-center gap-5 z-40">
 
-<!-- MENU SCREEN -->
-<div id="screen-menu">
-    <button id="btn-start" class="menu-button">START GAME</button>
-    <button id="btn-leaderboard" class="menu-button">LEADERBOARD</button>
-    <button id="btn-trails" class="menu-button">TRAIL SHOP</button>
-</div>
+    <button id="btn-start"
+            class="px-7 py-3 bg-emerald-500 hover:bg-emerald-600 rounded-xl font-extrabold text-xl shadow-lg">
+      START GAME
+    </button>
 
-<!-- GAME OVER SCREEN -->
-<div id="screen-gameover" class="hidden">
+    <button id="btn-leaderboard"
+            class="px-6 py-3 bg-blue-600 hover:bg-blue-700 rounded-xl font-bold text-lg shadow">
+      LEADERBOARD
+    </button>
+
+    <button id="btn-trails"
+            class="px-6 py-3 bg-purple-600 hover:bg-purple-700 rounded-xl font-bold text-lg shadow">
+      TRAIL SHOP
+    </button>
+  </div>
+
+  <!-- ============================= -->
+  <!-- GAME OVER SCREEN (fancy)     -->
+  <!-- ============================= -->
+  <!-- IMPORTANT: no "hidden" class here, JS uses style.display = "flex"/"none" -->
+  <div id="screen-gameover"
+       style="
+         position:absolute;
+         inset:0;
+         background:rgba(0,0,0,0.88);
+         z-index:50;
+         display:none;          /* start hidden */
+         flex-direction:column;
+         justify-content:center;
+         align-items:center;
+         text-align:center;
+         opacity:0;
+         transition:opacity .35s ease-in-out;
+       ">
 
     <h1 style="
-        font-size:3.4rem;
-        font-weight:900;
-        color:#ef4444;
-        text-shadow:0 0 18px rgba(239,68,68,0.75);
-        margin-bottom:10px;">
-        GAME OVER
+      font-size:3.4rem;
+      font-weight:900;
+      color:#ef4444;
+      text-shadow:0 0 18px rgba(239,68,68,0.75);
+      margin-bottom:10px;">
+      GAME OVER
     </h1>
 
     <div style="font-size:1.45rem; font-weight:800; margin-bottom:20px;">
-        Final Score:
-        <span id="label-finalscore"
-              style="color:#fbbf24; font-size:2.3rem; font-weight:900; text-shadow:0 0 12px rgba(251,191,36,0.7);">
-            0
-        </span>
+      Final Score:
+      <span id="label-finalscore"
+            style="color:#fbbf24; font-size:2.3rem; font-weight:900; text-shadow:0 0 12px rgba(251,191,36,0.7);">
+        0
+      </span>
     </div>
 
-    <!-- Initials -->
-    <div id="initials-container" class="hidden"
+    <!-- initials container: JS toggles class "hidden" -->
+    <div id="initials-container"
+         class="hidden"
          style="
-            display:flex;
-            flex-direction:column;
-            align-items:center;
-            background:rgba(255,255,255,0.08);
-            padding:20px 26px;
-            border-radius:14px;
-            border:2px solid #fcd34d;
-            margin-bottom:22px;
-            animation:pulse-border 2s infinite;">
+           display:flex;
+           flex-direction:column;
+           align-items:center;
+           background:rgba(255,255,255,0.08);
+           padding:20px 26px;
+           border-radius:14px;
+           border:2px solid #fcd34d;
+           margin-bottom:22px;
+           animation:pulse-border 2s infinite;
+         ">
 
-        <div style="font-size:1.2rem; font-weight:800; color:#fcd34d; margin-bottom:10px;">
-            NEW HIGH SCORE!
-        </div>
+      <div style="font-size:1.2rem; font-weight:800; color:#fcd34d; margin-bottom:10px;">
+        NEW HIGH SCORE!
+      </div>
 
-        <input id="initials-input" maxlength="5" placeholder="_____"
-               style="background:#111827; border:2px solid #4b5563; color:#10b981; font-size:2.2rem;
-                      text-align:center; width:260px; border-radius:8px; margin-bottom:14px;
-                      text-transform:uppercase; font-family:monospace; letter-spacing:0.18em;">
+      <input id="initials-input" maxlength="5" placeholder="_____"
+             style="
+               background:#111827;
+               border:2px solid #4b5563;
+               color:#10b981;
+               font-size:2.2rem;
+               text-align:center;
+               width:260px;
+               border-radius:8px;
+               margin-bottom:14px;
+               text-transform:uppercase;
+               font-family:monospace;
+               letter-spacing:0.18em;
+             ">
 
-        <button id="btn-submit-score"
-                style="background:#10b981; color:#064e3b; padding:10px 28px; border-radius:8px;
-                       font-weight:900; font-size:1.25rem; cursor:pointer; border:none;">
-            SUBMIT
-        </button>
+      <button id="btn-submit-score"
+              style="
+                background:#10b981;
+                color:#064e3b;
+                padding:10px 28px;
+                border-radius:8px;
+                font-weight:900;
+                font-size:1.25rem;
+                cursor:pointer;
+                border:none;
+              ">
+        SUBMIT
+      </button>
     </div>
 
     <div style="display:flex; gap:20px;">
-        <button id="btn-restart"
-                style="padding:12px 24px; background:#fcd34d; color:#111827;
-                       border-radius:10px; border:none; font-weight:900;
-                       font-size:1.25rem; cursor:pointer;">
-            RESTART
-        </button>
+      <button id="btn-restart"
+              style="
+                padding:12px 24px;
+                background:#fcd34d;
+                color:#111827;
+                border-radius:10px;
+                border:none;
+                font-weight:900;
+                font-size:1.25rem;
+                cursor:pointer;
+              ">
+        RESTART
+      </button>
 
-        <button id="btn-leaderboard-2"
-                style="padding:12px 24px; background:#3b82f6; color:white;
-                       border-radius:10px; border:none; font-weight:900;
-                       font-size:1.25rem; cursor:pointer;">
-            LEADERBOARD
-        </button>
+      <button id="btn-leaderboard-2"
+              style="
+                padding:12px 24px;
+                background:#3b82f6;
+                color:white;
+                border-radius:10px;
+                border:none;
+                font-weight:900;
+                font-size:1.25rem;
+                cursor:pointer;
+              ">
+        LEADERBOARD
+      </button>
     </div>
+  </div>
 
-</div>
+  <!-- border pulse for initials box -->
+  <style>
+    @keyframes pulse-border {
+      0%   { box-shadow:0 0 0 0 rgba(252,211,77,0.4); }
+      60%  { box-shadow:0 0 0 12px rgba(252,211,77,0); }
+      100% { box-shadow:0 0 0 0 rgba(252,211,77,0); }
+    }
+  </style>
 
-<!-- LEADERBOARD SCREEN -->
-<div id="screen-leaderboard">
+  <!-- ============================= -->
+  <!-- LEADERBOARD SCREEN            -->
+  <!-- ============================= -->
+  <div id="screen-leaderboard"
+       style="
+         position:absolute;
+         inset:0;
+         background:rgba(0,0,0,0.92);
+         z-index:60;
+         display:none;         /* UI.js uses style.display */
+         flex-direction:column;
+         align-items:center;
+         padding-top:60px;
+         overflow-y:auto;
+         opacity:0;
+         transition:opacity .3s ease-in-out;
+       ">
+
     <button id="btn-close-leaderboard"
-        style="position:absolute; top:20px; right:20px; padding:10px 20px;
-               background:#ef4444; color:white; border:none; border-radius:10px;
-               font-weight:900; font-size:1.2rem; cursor:pointer;">
-        ✕ CLOSE
+            style="
+              position:absolute;
+              top:20px;
+              right:20px;
+              padding:10px 20px;
+              background:#ef4444;
+              color:white;
+              border:none;
+              border-radius:10px;
+              font-weight:900;
+              font-size:1.1rem;
+              cursor:pointer;
+            ">
+      ✕ CLOSE
     </button>
 
     <h1 style="font-size:3rem; font-weight:900; color:#10b981; margin-bottom:20px;">
-        TOP 100 RUNNERS
+      TOP 100 RUNNERS
     </h1>
 
-    <div style="width:90%; max-width:600px; background:rgba(0,0,0,0.7);
-                padding:20px; border-radius:10px; border:2px solid #10b981;
-                max-height:70vh; overflow-y:auto;">
+    <div style="
+      width:90%;
+      max-width:600px;
+      background:rgba(0,0,0,0.7);
+      padding:20px;
+      border-radius:10px;
+      border:2px solid #10b981;
+      max-height:70vh;
+      overflow-y:auto;">
+      <div class="lb-entry lb-header"
+           style="display:flex; justify-content:space-between; border-bottom:2px solid #fcd34d; margin-bottom:10px; font-weight:900;">
+        <span style="width:10%; text-align:center;">#</span>
+        <span style="width:30%;">INITIALS</span>
+        <span style="width:30%; text-align:right;">SCORE</span>
+      </div>
 
-        <div class="lb-entry lb-header">
-            <span style="width:10%; text-align:center;">#</span>
-            <span style="width:30%;">INITIALS</span>
-            <span style="width:30%; text-align:right;">SCORE</span>
-        </div>
-
-        <div id="leaderboard-list">Loading...</div>
+      <div id="leaderboard-list">
+        Loading...
+      </div>
     </div>
-</div>
+  </div>
 
-<!-- TRAIL SHOP SCREEN -->
-<div id="screen-trails">
+  <!-- ============================= -->
+  <!-- TRAIL SHOP SCREEN             -->
+  <!-- ============================= -->
+  <div id="screen-trails"
+       style="
+         position:absolute;
+         inset:0;
+         background:rgba(0,0,0,0.92);
+         z-index:70;
+         display:none;        /* UI.js uses style.display */
+         flex-direction:column;
+         align-items:center;
+         padding:40px 0;
+         overflow-y:auto;
+         opacity:0;
+         transition:opacity .25s ease-in-out;
+       ">
+
     <button id="btn-close-trails"
-        style="position:absolute; top:20px; right:20px; background:#ef4444;
-               color:white; padding:8px 16px; border:none; border-radius:10px;
-               font-weight:900; font-size:1.1rem;">
-        ✕ CLOSE
+            style="
+              position:absolute;
+              top:20px;
+              right:20px;
+              background:#ef4444;
+              color:white;
+              padding:8px 16px;
+              border:none;
+              border-radius:10px;
+              font-weight:900;
+              font-size:1.1rem;
+              cursor:pointer;
+            ">
+      ✕ CLOSE
     </button>
 
     <h1 style="font-size:3rem; color:#3b82f6; font-weight:900; margin-bottom:20px;">
-        TRAIL SHOP
+      TRAIL SHOP
     </h1>
 
-    <div id="trail-list" style="width:300px;"></div>
-</div>
+    <div id="trail-list"
+         style="width:300px;">
+      <!-- filled by ui.js -->
+    </div>
+  </div>
 
-<!-- JS FILES -->
-<script type="module" src="constants.js"></script>
-<script type="module" src="assets.js"></script>
-<script type="module" src="player.js"></script>
-<script type="module" src="difficulty.js"></script>
-<script type="module" src="obstacles.js"></script>
-<script type="module" src="powerups.js"></script>
-<script type="module" src="trails.js"></script>
-<script type="module" src="collisions.js"></script>
-<script type="module" src="firebase.js"></script>
-<script type="module" src="ui.js"></script>
-<script type="module" src="game.js"></script>
+  <!-- ============================= -->
+  <!-- SINGLE ENTRYPOINT SCRIPT      -->
+  <!-- ============================= -->
+  <!-- IMPORTANT: let game.js import everything else -->
+  <script type="module" src="src/game.js"></script>
 
 </body>
 </html>

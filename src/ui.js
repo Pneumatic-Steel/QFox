@@ -144,7 +144,7 @@ export function showGame() {
 }
 
 export function showGameOver(finalScore) {
-  UI.state = GAME_STATE.GAME_OVER();
+  UI.state = GAME_STATE.GAME_OVER;
 
   if (UI.labels.finalScore)
     UI.labels.finalScore.textContent = finalScore;
@@ -265,3 +265,4 @@ export function updateTrailList() {
     };
   });
 }
+

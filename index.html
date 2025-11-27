@@ -73,12 +73,31 @@
       Final Score: <span id="label-finalscore">0</span>
     </div>
 
+    <!-- NEW: initials entry for leaderboard -->
+    <div id="initials-container"
+         class="flex flex-col items-center space-y-2 mt-4 hidden">
+      <p class="text-lg">NEW HIGH SCORE! Enter your initials (5 letters):</p>
+      <input
+        id="initials-input"
+        type="text"
+        maxlength="5"
+        class="text-black px-3 py-1 rounded text-center tracking-widest uppercase"
+        placeholder="AAAAA"
+        autocomplete="off"
+      />
+      <button id="btn-submit-score"
+              class="px-4 py-2 bg-yellow-500 hover:bg-yellow-600 rounded">
+        SUBMIT SCORE
+      </button>
+    </div>
+
     <button id="btn-restart"
             class="px-6 py-3 bg-green-600 hover:bg-green-700 rounded text-xl">
       RESTART
     </button>
 
-    <button id="btn-leaderboard"
+    <!-- NOTE: different id from menu button -->
+    <button id="btn-leaderboard-2"
             class="px-6 py-3 bg-blue-600 hover:bg-blue-700 rounded">
       LEADERBOARD
     </button>

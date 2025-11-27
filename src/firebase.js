@@ -1,6 +1,4 @@
-// =====================================================
-// FIREBASE IMPORTS
-// =====================================================
+// src/firebase.js
 
 import { STORAGE_KEYS } from "./constants.js";
 import { player, savePlayerToStorage } from "./player.js";
@@ -57,8 +55,8 @@ export function initFirebase() {
 
   onAuthStateChanged(auth, (firebaseUser) => {
     if (!firebaseUser) return;
-    user = firebaseUser;
 
+    user = firebaseUser;
     console.log("Logged in as:", user.uid);
 
     loadHighScore();
@@ -70,9 +68,15 @@ export function initFirebase() {
 // =====================================================
 
 async function loadHighScore() {
+  // local first
   const local = localStorage.getItem(STORAGE_KEYS.HIGH_SCORE);
-  if (local) {
+  if (local != null) {
     player.highScore = parseInt(local, 10) || 0;
+  }
+
+  if (!db || !user) {
+    updateHighScoreLabel();
+    return;
   }
 
   try {
@@ -83,7 +87,7 @@ async function loadHighScore() {
       const cloudScore = Number(snap.data().highScore) || 0;
       if (cloudScore > player.highScore) {
         player.highScore = cloudScore;
-        localStorage.setItem(STORAGE_KEYS.HIGH_SCORE, cloudScore);
+        localStorage.setItem(STORAGE_KEYS.HIGH_SCORE, String(cloudScore));
       }
     }
   } catch (err) {
@@ -94,19 +98,20 @@ async function loadHighScore() {
 }
 
 export async function saveHighScore(score) {
-  player.highScore = score;
-  localStorage.setItem(STORAGE_KEYS.HIGH_SCORE, score);
+  const numeric = Number(score) || 0;
+  player.highScore = numeric;
+  localStorage.setItem(STORAGE_KEYS.HIGH_SCORE, String(numeric));
   updateHighScoreLabel();
   savePlayerToStorage();
 
-  if (!user) return;
+  if (!user || !db) return;
 
   try {
     const ref = doc(db, "users", user.uid);
     await setDoc(
       ref,
       {
-        highScore: score,
+        highScore: numeric,
         timestamp: serverTimestamp(),
       },
       { merge: true }
@@ -117,7 +122,7 @@ export async function saveHighScore(score) {
 }
 
 // =====================================================
-// LEADERBOARD (PATCHED – NO MORE NaN)
+// LEADERBOARD (FIXED RANK + NaN PROOF)
 // =====================================================
 
 export async function loadLeaderboard() {
@@ -126,44 +131,49 @@ export async function loadLeaderboard() {
 
   listEl.innerHTML = "Loading...";
 
+  if (!db) {
+    listEl.innerHTML = "Leaderboard unavailable (no database).";
+    return;
+  }
+
   try {
     const ref = collection(db, "leaderboard");
     const q = query(ref, orderBy("score", "desc"), limit(100));
     const snap = await getDocs(q);
 
     let html = "";
+    let rank = 1; // manual rank counter (DON'T rely on Firestore for index)
 
-    snap.forEach((docSnap, idx) => {
-      const d = docSnap.data();
+    snap.forEach((docSnap) => {
+      const d = docSnap.data() || {};
 
-      // SAFELY FIXED
       const initials = (d.initials || "???").toString().substring(0, 5);
       const score = Number(d.score) || 0;
 
-      // RANK ICON
-      let rankIcon = "";
-      if (idx === 0)       rankIcon = "🔥";
-      else if (idx === 1)  rankIcon = "🥈";
-      else if (idx === 2)  rankIcon = "🥉";
-      else                 rankIcon = idx + 1;
+      // RANK ICONS
+      let rankDisplay;
+      if (rank === 1) rankDisplay = "🔥";
+      else if (rank === 2) rankDisplay = "🥈";
+      else if (rank === 3) rankDisplay = "🥉";
+      else rankDisplay = rank; // 4, 5, 6, ...
 
-      // Colors & glow effects
+      // COLORS & GLOW
       let rowGlow = "";
       let nameColor = "";
       let scoreColor = "";
 
-      switch (idx) {
-        case 0:
+      switch (rank) {
+        case 1:
           rowGlow = "0 0 14px rgba(255,165,0,0.75)";
           nameColor = "#fbbf24";
           scoreColor = "#fde68a";
           break;
-        case 1:
+        case 2:
           rowGlow = "0 0 14px rgba(192,192,192,0.65)";
           nameColor = "#d1d5db";
           scoreColor = "#e5e7eb";
           break;
-        case 2:
+        case 3:
           rowGlow = "0 0 14px rgba(205,127,50,0.65)";
           nameColor = "#cd7f32";
           scoreColor = "#f2c899";
@@ -175,7 +185,6 @@ export async function loadLeaderboard() {
           break;
       }
 
-      // FINAL RENDER
       html += `
         <div class="lb-entry"
              style="
@@ -192,7 +201,7 @@ export async function loadLeaderboard() {
         >
           <span class="lb-rank"
                 style="width:20%; text-align:center; font-weight:900; font-size:1.2rem;">
-            ${rankIcon}
+            ${rankDisplay}
           </span>
 
           <span class="lb-initials"
@@ -206,6 +215,8 @@ export async function loadLeaderboard() {
           </span>
         </div>
       `;
+
+      rank++;
     });
 
     listEl.innerHTML = html || "Be the first to set a score!";
@@ -216,7 +227,7 @@ export async function loadLeaderboard() {
 }
 
 // =====================================================
-// SUBMIT TO LEADERBOARD
+// SUBMIT SCORE TO LEADERBOARD
 // =====================================================
 
 export async function submitLeaderboardScore(score, initials) {
@@ -225,7 +236,7 @@ export async function submitLeaderboardScore(score, initials) {
   try {
     const ref = collection(db, "leaderboard");
     await addDoc(ref, {
-      initials,
+      initials: (initials || "???").toString().substring(0, 5),
       score: Number(score) || 0,
       uid: user.uid,
       timestamp: serverTimestamp(),
@@ -237,4 +248,5 @@ export async function submitLeaderboardScore(score, initials) {
   }
 }
 
+// make available to ui.js
 window.qfoxSubmitScore = submitLeaderboardScore;

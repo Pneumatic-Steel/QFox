@@ -1,0 +1,213 @@
+/* ========================================
+   GLOBAL
+======================================== */
+
+html, body {
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  background: black;
+  font-family: 'Inter', sans-serif;
+  color: white;
+}
+
+/* Remove outlines on buttons for cleaner UI */
+button:focus {
+  outline: none !important;
+}
+
+/* ========================================
+   SCROLLBARS
+======================================== */
+
+::-webkit-scrollbar {
+  width: 10px;
+}
+::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.05);
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.25);
+  border-radius: 5px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.4);
+}
+
+/* ========================================
+   SCREEN PANELS
+======================================== */
+
+#screen-menu,
+#screen-gameover,
+#screen-leaderboard,
+#screen-trails {
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  animation: fadeIn 0.2s ease-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+/* ========================================
+   BUTTONS
+======================================== */
+
+button {
+  font-weight: 600;
+  transition: background-color 0.15s ease,
+              transform 0.1s ease;
+}
+
+button:hover {
+  transform: scale(1.04);
+}
+
+/* For shop buttons specifically */
+.buy-btn, .equip-btn {
+  padding: 6px 10px;
+  border-radius: 6px;
+  background-color: #444;
+  color: white;
+  cursor: pointer;
+}
+
+.buy-btn:hover {
+  background-color: #6a2b2b;
+}
+
+.equip-btn:hover {
+  background-color: #2b6a2b;
+}
+
+/* ========================================
+   HUD (in-game top-left)
+======================================== */
+
+#hud > div {
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  border: 1px solid rgba(255,255,255,0.15);
+}
+
+/* ========================================
+   TRAIL SHOP ITEMS
+======================================== */
+
+#trail-list {
+  font-size: 1.05rem;
+}
+
+.trail-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+
+  background-color: rgba(255,255,255,0.06);
+  padding: 12px 16px;
+  border-radius: 12px;
+
+  border: 1px solid rgba(255,255,255,0.1);
+}
+
+.trail-name {
+  font-weight: 600;
+  font-size: 1.1rem;
+}
+
+.trail-status {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.equipped-label {
+  background-color: #2b6a2b;
+  padding: 6px 10px;
+  border-radius: 6px;
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+/* ========================================
+   LEADERBOARD
+======================================== */
+
+#leaderboard-list {
+  border-radius: 8px;
+  border: 1px solid rgba(255,255,255,0.15);
+}
+
+.lb-entry {
+  display: grid;
+  grid-template-columns: 40px 1fr 100px;
+  padding: 10px 12px;
+  border-bottom: 1px solid rgba(255,255,255,0.1);
+}
+
+.lb-entry:last-child {
+  border-bottom: none;
+}
+
+.lb-rank {
+  opacity: 0.6;
+}
+
+.lb-initials {
+  font-weight: 600;
+}
+
+/* ========================================
+   GAME OVER SCREEN
+======================================== */
+
+#screen-gameover h2 {
+  text-shadow: 0px 0px 12px rgba(255,0,0,0.4);
+}
+
+#label-finalscore {
+  color: #fcd34d; /* gold */
+  font-weight: 600;
+}
+
+/* ========================================
+   TRANSITIONS
+======================================== */
+
+.hidden {
+  display: none !important;
+}
+
+.fade-out {
+  animation: fadeOut 0.3s forwards;
+}
+
+@keyframes fadeOut {
+  to { opacity: 0; }
+}
+
+/* ========================================
+   MOBILE
+======================================== */
+
+@media (max-width: 640px) {
+
+  #trail-list,
+  #leaderboard-list {
+    height: 60vh !important;
+  }
+
+  .trail-item {
+    flex-direction: column;
+    gap: 8px;
+    text-align: center;
+  }
+
+  #hud > div {
+    font-size: 0.8rem;
+    padding: 4px 8px;
+  }
+}

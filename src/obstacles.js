@@ -37,19 +37,35 @@ function loadTexture(url, onTex) {
   );
 }
 
+// =============================================================
+// INIT & CLEANUP
+// =============================================================
+
 export function initObstacles(scene) {
   sceneRef = scene;
   spawnTimer = 0;
   currentSpawnInterval = BASE_SPAWN_RATE;
 
-  // clear any existing
-  for (const o of obstacles) sceneRef.remove(o);
-  for (const p of powerups) sceneRef.remove(p);
+  // Remove all existing obstacles AND their halos
+  for (const o of obstacles) {
+    if (o.userData && o.userData.halo) {
+      sceneRef.remove(o.userData.halo);
+    }
+    sceneRef.remove(o);
+  }
+
+  // Remove all powerups
+  for (const p of powerups) {
+    sceneRef.remove(p);
+  }
+
   obstacles.length = 0;
   powerups.length = 0;
 }
 
-// ------------------ SPAWN HELPERS ------------------
+// =============================================================
+// SPAWN HELPERS
+// =============================================================
 
 function spawnOrb(laneIndex) {
   if (!sceneRef) return;
@@ -145,7 +161,9 @@ function spawnPowerup(laneIndex, type) {
   return mesh;
 }
 
-// ------------------ UPDATE / MOVEMENT / SPAWN ------------------
+// =============================================================
+// UPDATE / MOVEMENT / SPAWN
+// =============================================================
 
 export function updateObstacles(deltaFrames, gameSpeed, score, foxZ, onScoreGain) {
   if (!sceneRef) return;
@@ -161,7 +179,7 @@ export function updateObstacles(deltaFrames, gameSpeed, score, foxZ, onScoreGain
 
     const lane = Math.floor(Math.random() * LANE_POSITIONS.length);
 
-    // Rare powerup spawn; decide type with weighted chance
+    // Rare powerup spawn; decide type
     const roll = Math.random();
     if (roll < SHIELD_SPAWN_CHANCE) {
       spawnPowerup(lane, "shield");
@@ -174,7 +192,7 @@ export function updateObstacles(deltaFrames, gameSpeed, score, foxZ, onScoreGain
 
   const moveZ = gameSpeed * deltaFrames;
 
-  // Move orbs
+  // Move orbs + halos
   for (let i = obstacles.length - 1; i >= 0; i--) {
     const orb = obstacles[i];
     orb.position.z += moveZ;
@@ -191,12 +209,11 @@ export function updateObstacles(deltaFrames, gameSpeed, score, foxZ, onScoreGain
       if (onScoreGain) onScoreGain(10);
     }
 
-    // cleanup
+    // cleanup when far behind
     if (orb.position.z > 100) {
+      if (halo) sceneRef.remove(halo);
       sceneRef.remove(orb);
       obstacles.splice(i, 1);
-
-      if (halo) sceneRef.remove(halo);
     }
   }
 
@@ -212,15 +229,19 @@ export function updateObstacles(deltaFrames, gameSpeed, score, foxZ, onScoreGain
   }
 }
 
+// =============================================================
+// REMOVAL HELPERS (used by collisions.js)
+// =============================================================
+
 export function removeObstacleMesh(mesh) {
   if (!sceneRef) return;
   const i = obstacles.indexOf(mesh);
   if (i !== -1) {
+    const halo = mesh.userData.halo;
+    if (halo) sceneRef.remove(halo);
     sceneRef.remove(mesh);
     obstacles.splice(i, 1);
   }
-  const halo = mesh.userData.halo;
-  if (halo) sceneRef.remove(halo);
 }
 
 export function removePowerupMesh(mesh) {

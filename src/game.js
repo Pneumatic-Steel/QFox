@@ -130,7 +130,6 @@ function createFox() {
   foxPlayer.renderOrder = 2;
   scene.add(foxPlayer);
 
-  // give trails a reference
   setTrailFox(foxPlayer);
 }
 
@@ -161,12 +160,10 @@ function createTrack() {
   floorMesh.position.set(0, 0, 0);
   scene.add(floorMesh);
 
-  // basic fog
   const initialFogColor = new THREE.Color(COLOR_SCHEMES[0].fog);
   scene.fog = new THREE.Fog(initialFogColor, 40, 150);
 }
 
-// Color progression for floor+fog based on score
 function updateFloorAndBackground() {
   if (!floorMesh || !scene.fog) return;
 
@@ -240,23 +237,21 @@ function onTouchEnd(e) {
 
 function startRun() {
   resetPlayerForRun();
+
   updateScoreLabel(player.score);
   updateOrbsLabel();
 
   gameSpeed = computeGameSpeed(player.score);
   runningTime = 0;
 
-  // reset fox pos
   if (foxPlayer) {
     foxPlayer.position.x = LANE_POSITIONS[player.laneIndex];
     foxPlayer.position.y = FOX_BASE_HEIGHT;
     foxPlayer.position.z = 5;
   }
 
-  // clear obstacles & powerups
   initObstacles(scene);
 
-  // restart music
   if (bgm) {
     bgm.currentTime = 0;
     bgm.play().catch(() => {});
@@ -271,7 +266,6 @@ function doGameOver() {
 
   if (bgm) bgm.pause();
 
-  // high score
   if (player.score > player.highScore) {
     player.highScore = player.score;
     saveHighScore(player.highScore);
@@ -280,18 +274,16 @@ function doGameOver() {
   showGameOver(player.score);
 }
 
-// called from UI (we expose startRun via window)
 window.startGame = () => {
   startRun();
 };
 
-// leaderboard loader for UI
 window.loadLeaderboard = () => {
   loadLeaderboard();
 };
 
 // --------------------------------------------------
-// MAIN UPDATE LOOP
+// MAIN LOOP
 // --------------------------------------------------
 
 function animate() {
@@ -305,28 +297,22 @@ function animate() {
   TWEEN.update();
 
   if (gameState === GAME_STATE.PLAYING) {
-    // update speed by score
     gameSpeed = computeGameSpeed(player.score);
 
-    // fox bobbing
     if (foxPlayer) {
       runningTime += 0.11 * deltaFrames;
       foxPlayer.position.y =
         FOX_BASE_HEIGHT + Math.sin(runningTime * 5) * 0.1;
     }
 
-    // scroll floor texture
     if (floorTexture) {
       floorTexture.offset.y += gameSpeed * 0.02 * deltaFrames;
     }
 
-    // update floor color + fog
     updateFloorAndBackground();
 
-    // update powerups timers (shield/multiplier)
     updatePowerups();
 
-    // obstacles + powerups movement + spawn + score
     updateObstacles(
       deltaFrames,
       gameSpeed,
@@ -334,16 +320,11 @@ function animate() {
       foxPlayer ? foxPlayer.position.z : 5,
       (basePoints) => {
         const { scoreGained, orbsGained } = addScore(basePoints);
-        if (scoreGained !== 0) {
-          updateScoreLabel(player.score);
-        }
-        if (orbsGained !== 0) {
-          updateOrbsLabel();
-        }
+        if (scoreGained !== 0) updateScoreLabel(player.score);
+        if (orbsGained !== 0) updateOrbsLabel();
       }
     );
 
-    // collisions
     handleObstacleCollisions(
       foxPlayer,
       obstacles,
@@ -357,32 +338,28 @@ function animate() {
       (p) => removePowerupMesh(p)
     );
 
-    // trails
     updateTrail(deltaFrames, player.score);
 
-    // billboard all billboards towards camera
     if (camera) {
       for (const orb of obstacles) {
-        if (orb.userData && orb.userData.billboard && orb.lookAt) {
+        if (orb.userData?.billboard && orb.lookAt) {
           orb.lookAt(camera.position);
         }
         const halo = orb.userData.halo;
-        if (halo && halo.lookAt) {
+        if (halo?.lookAt) {
           halo.lookAt(camera.position);
         }
       }
 
       for (const p of powerups) {
-        if (p.userData && p.userData.billboard && p.lookAt) {
+        if (p.userData?.billboard && p.lookAt) {
           p.lookAt(camera.position);
         }
       }
     }
   }
 
-  if (renderer && scene && camera) {
-    renderer.render(scene, camera);
-  }
+  if (renderer) renderer.render(scene, camera);
 }
 
 // --------------------------------------------------
@@ -425,7 +402,6 @@ function initThree() {
   setupVideoBackground();
   createTrack();
   createFox();
-
   initTrails(scene);
 
   window.addEventListener("resize", onResize);
@@ -442,7 +418,6 @@ window.addEventListener("load", () => {
   initUI();
   initThree();
 
-  // start in menu
   showMenu();
 
   window.addEventListener("keydown", onKeyDown);

@@ -15,6 +15,7 @@ export const UI = {
     start: null,
     restart: null,
     leaderboardOpen: null,
+    leaderboardOpen2: null,
     leaderboardClose: null,
     trailsOpen: null,
     trailsClose: null,
@@ -25,6 +26,13 @@ export const UI = {
     highScore: null,
     finalScore: null,
     orbs: null,
+  },
+
+  initials: {
+    container: null,
+    input: null,
+    submit: null,
+    pendingScore: 0,
   },
 
   trailListContainer: null,
@@ -41,6 +49,7 @@ export function initUI() {
   UI.buttons.start = document.getElementById("btn-start");
   UI.buttons.restart = document.getElementById("btn-restart");
   UI.buttons.leaderboardOpen = document.getElementById("btn-leaderboard");
+  UI.buttons.leaderboardOpen2 = document.getElementById("btn-leaderboard-2");
   UI.buttons.leaderboardClose = document.getElementById("btn-close-leaderboard");
   UI.buttons.trailsOpen = document.getElementById("btn-trails");
   UI.buttons.trailsClose = document.getElementById("btn-close-trails");
@@ -51,35 +60,59 @@ export function initUI() {
   UI.labels.finalScore = document.getElementById("label-finalscore");
   UI.labels.orbs = document.getElementById("label-orbs");
 
+  // Initials form
+  UI.initials.container = document.getElementById("initials-container");
+  UI.initials.input = document.getElementById("initials-input");
+  UI.initials.submit = document.getElementById("btn-submit-score");
+
   UI.trailListContainer = document.getElementById("trail-list");
 
   // Hook up buttons
-  if (UI.buttons.start) {
-    UI.buttons.start.onclick = () => showGame();
-  }
+  if (UI.buttons.start) UI.buttons.start.onclick = () => showGame();
+  if (UI.buttons.restart) UI.buttons.restart.onclick = () => showGame();
 
-  if (UI.buttons.restart) {
-    UI.buttons.restart.onclick = () => showGame();
-  }
-
-  if (UI.buttons.leaderboardOpen) {
+  if (UI.buttons.leaderboardOpen)
     UI.buttons.leaderboardOpen.onclick = () => showLeaderboard();
-  }
 
-  if (UI.buttons.leaderboardClose) {
+  if (UI.buttons.leaderboardOpen2)
+    UI.buttons.leaderboardOpen2.onclick = () => showLeaderboard();
+
+  if (UI.buttons.leaderboardClose)
     UI.buttons.leaderboardClose.onclick = () => hideLeaderboard();
-  }
 
-  if (UI.buttons.trailsOpen) {
+  if (UI.buttons.trailsOpen)
     UI.buttons.trailsOpen.onclick = () => showTrails();
-  }
 
-  if (UI.buttons.trailsClose) {
+  if (UI.buttons.trailsClose)
     UI.buttons.trailsClose.onclick = () => hideTrails();
+
+  // Initials submit
+  if (UI.initials.submit) {
+    UI.initials.submit.onclick = () => {
+      const raw = (UI.initials.input.value || "")
+        .toUpperCase()
+        .replace(/[^A-Z]/g, "")
+        .slice(0, 5);
+
+      const initials = raw || "AAAAA";
+      const score = UI.initials.pendingScore || 0;
+
+      if (window.qfoxSubmitScore) {
+        window.qfoxSubmitScore(score, initials);
+      }
+
+      // hide form after submit
+      if (UI.initials.container) {
+        UI.initials.container.classList.add("hidden");
+      }
+    };
   }
 
-  updateTrailList();
+  // Initial HUD text
+  updateScoreLabel(player.score);
   updateOrbsLabel();
+  updateHighScoreLabel();
+  updateTrailList();
 }
 
 // -------------------------------------------------------------
@@ -89,19 +122,22 @@ export function initUI() {
 export function showMenu() {
   UI.state = GAME_STATE.MENU;
 
-  UI.screens.menu.style.display = "flex";
-  UI.screens.gameOver.style.display = "none";
-  UI.screens.leaderboard.style.display = "none";
-  UI.screens.trails.style.display = "none";
+  if (UI.screens.menu) UI.screens.menu.style.display = "flex";
+  if (UI.screens.gameOver) UI.screens.gameOver.style.display = "none";
+  if (UI.screens.leaderboard) UI.screens.leaderboard.style.display = "none";
+  if (UI.screens.trails) UI.screens.trails.style.display = "none";
 }
 
 export function showGame() {
   UI.state = GAME_STATE.PLAYING;
 
-  UI.screens.menu.style.display = "none";
-  UI.screens.gameOver.style.display = "none";
-  UI.screens.leaderboard.style.display = "none";
-  UI.screens.trails.style.display = "none";
+  if (UI.screens.menu) UI.screens.menu.style.display = "none";
+  if (UI.screens.gameOver) UI.screens.gameOver.style.display = "none";
+  if (UI.screens.leaderboard) UI.screens.leaderboard.style.display = "none";
+  if (UI.screens.trails) UI.screens.trails.style.display = "none";
+
+  // hide initials box when starting
+  if (UI.initials.container) UI.initials.container.classList.add("hidden");
 
   // Game.js will handle resetting game logic
   if (window.startGame) window.startGame();
@@ -110,48 +146,71 @@ export function showGame() {
 export function showGameOver(finalScore) {
   UI.state = GAME_STATE.GAME_OVER;
 
-  UI.labels.finalScore.textContent = finalScore;
-  UI.labels.highScore.textContent = player.highScore;
+  if (UI.labels.finalScore)
+    UI.labels.finalScore.textContent = finalScore;
 
-  UI.screens.menu.style.display = "none";
-  UI.screens.gameOver.style.display = "flex";
-  UI.screens.leaderboard.style.display = "none";
-  UI.screens.trails.style.display = "none";
+  updateHighScoreLabel();
+
+  if (UI.screens.menu) UI.screens.menu.style.display = "none";
+  if (UI.screens.gameOver) UI.screens.gameOver.style.display = "flex";
+  if (UI.screens.leaderboard) UI.screens.leaderboard.style.display = "none";
+  if (UI.screens.trails) UI.screens.trails.style.display = "none";
+
+  // always show initials prompt on game over (simpler for now)
+  UI.initials.pendingScore = finalScore;
+  if (UI.initials.container) {
+    UI.initials.container.classList.remove("hidden");
+    if (UI.initials.input) {
+      UI.initials.input.value = "";
+      UI.initials.input.focus();
+    }
+  }
 }
 
 export function showLeaderboard() {
   UI.state = GAME_STATE.LEADERBOARD;
 
-  UI.screens.leaderboard.style.display = "flex";
+  if (UI.screens.leaderboard)
+    UI.screens.leaderboard.style.display = "flex";
+
   if (window.loadLeaderboard) window.loadLeaderboard();
 }
 
 export function hideLeaderboard() {
-  UI.screens.leaderboard.style.display = "none";
+  if (UI.screens.leaderboard)
+    UI.screens.leaderboard.style.display = "none";
+
   UI.state = GAME_STATE.MENU;
 }
 
 export function showTrails() {
   UI.state = GAME_STATE.TRAILS;
-  UI.screens.trails.style.display = "flex";
+  if (UI.screens.trails) UI.screens.trails.style.display = "flex";
   updateTrailList();
 }
 
 export function hideTrails() {
-  UI.screens.trails.style.display = "none";
+  if (UI.screens.trails) UI.screens.trails.style.display = "none";
   UI.state = GAME_STATE.MENU;
 }
 
 // -------------------------------------------------------------
-// SCORE & ORBS
+// SCORE & ORBS & HIGHSCORE LABELS
 // -------------------------------------------------------------
 
 export function updateScoreLabel(score) {
-  if (UI.labels.score) UI.labels.score.textContent = score;
+  if (UI.labels.score)
+    UI.labels.score.textContent = `Score: ${score}`;
+}
+
+export function updateHighScoreLabel() {
+  if (UI.labels.highScore)
+    UI.labels.highScore.textContent = `High Score: ${player.highScore}`;
 }
 
 export function updateOrbsLabel() {
-  if (UI.labels.orbs) UI.labels.orbs.textContent = player.orbs;
+  if (UI.labels.orbs)
+    UI.labels.orbs.textContent = `Orbs: ${player.orbs}`;
 }
 
 // -------------------------------------------------------------
@@ -167,7 +226,7 @@ export function updateTrailList() {
     const div = document.createElement("div");
     div.className = "trail-item";
 
-    const unlocked = player.trailUnlocks[trail.id];
+    const unlocked = !!player.trailUnlocks[trail.id];
     const equipped = player.equippedTrailId === trail.id;
 
     div.innerHTML = `

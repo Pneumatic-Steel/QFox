@@ -1,16 +1,6 @@
-import {
-  STORAGE_KEYS
-} from "./constants.js";
-
-import {
-  player,
-  savePlayerToStorage
-} from "./player.js";
-
-import {
-  UI,
-  updateScoreLabel
-} from "./ui.js";
+import { STORAGE_KEYS } from "./constants.js";
+import { player, savePlayerToStorage } from "./player.js";
+import { UI, updateScoreLabel, updateHighScoreLabel } from "./ui.js";
 
 import {
   initializeApp
@@ -94,10 +84,16 @@ async function loadHighScore() {
     console.warn("Failed to fetch high score:", err);
   }
 
-  updateScoreLabel(player.highScore);
+  // Update HUD labels correctly
+  updateHighScoreLabel();
 }
 
 export async function saveHighScore(score) {
+  player.highScore = score;
+  localStorage.setItem(STORAGE_KEYS.HIGH_SCORE, score);
+  updateHighScoreLabel();
+  savePlayerToStorage();
+
   if (!user) return;
 
   try {
@@ -110,8 +106,6 @@ export async function saveHighScore(score) {
       },
       { merge: true }
     );
-
-    localStorage.setItem(STORAGE_KEYS.HIGH_SCORE, score);
   } catch (err) {
     console.warn("Failed to save high score:", err);
   }
@@ -147,14 +141,15 @@ export async function loadLeaderboard() {
         </div>`;
     });
 
-    listEl.innerHTML = html;
+    listEl.innerHTML = html || "Be the first to set a score!";
   } catch (err) {
+    console.warn(err);
     listEl.innerHTML = "Failed to load leaderboard.";
   }
 }
 
 export async function submitLeaderboardScore(score, initials) {
-  if (!user) return;
+  if (!user || !db) return;
 
   try {
     const ref = collection(db, "leaderboard");
@@ -164,7 +159,12 @@ export async function submitLeaderboardScore(score, initials) {
       uid: user.uid,
       timestamp: serverTimestamp(),
     });
+
+    console.log("Leaderboard score submitted:", initials, score);
   } catch (err) {
     console.warn("Failed to submit leaderboard score:", err);
   }
 }
+
+// Expose for UI without creating circular imports
+window.qfoxSubmitScore = submitLeaderboardScore;

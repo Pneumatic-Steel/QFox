@@ -29,6 +29,12 @@ export const player = {
 
 export function initPlayerFromStorage() {
   try {
+    // Load high score locally so it works even if Firebase is unavailable
+    const hsStr = localStorage.getItem(STORAGE_KEYS.HIGH_SCORE);
+    if (hsStr != null) {
+      player.highScore = parseInt(hsStr, 10) || 0;
+    }
+
     const orbsStr = localStorage.getItem(STORAGE_KEYS.ORBS);
     if (orbsStr != null) {
       player.orbs = parseInt(orbsStr, 10) || 0;

@@ -122,19 +122,49 @@ export function initUI() {
 export function showMenu() {
   UI.state = GAME_STATE.MENU;
 
-  if (UI.screens.menu) UI.screens.menu.style.display = "flex";
-  if (UI.screens.gameOver) UI.screens.gameOver.style.display = "none";
-  if (UI.screens.leaderboard) UI.screens.leaderboard.style.display = "none";
-  if (UI.screens.trails) UI.screens.trails.style.display = "none";
+  if (UI.screens.menu) {
+    UI.screens.menu.classList.remove("hidden");
+    UI.screens.menu.style.display = "flex";
+  }
+
+  if (UI.screens.gameOver) {
+    UI.screens.gameOver.classList.add("hidden");
+    UI.screens.gameOver.style.display = "none";
+  }
+
+  if (UI.screens.leaderboard) {
+    UI.screens.leaderboard.classList.add("hidden");
+    UI.screens.leaderboard.style.display = "none";
+  }
+
+  if (UI.screens.trails) {
+    UI.screens.trails.classList.add("hidden");
+    UI.screens.trails.style.display = "none";
+  }
 }
 
 export function showGame() {
   UI.state = GAME_STATE.PLAYING;
 
-  if (UI.screens.menu) UI.screens.menu.style.display = "none";
-  if (UI.screens.gameOver) UI.screens.gameOver.style.display = "none";
-  if (UI.screens.leaderboard) UI.screens.leaderboard.style.display = "none";
-  if (UI.screens.trails) UI.screens.trails.style.display = "none";
+  if (UI.screens.menu) {
+    UI.screens.menu.classList.add("hidden");
+    UI.screens.menu.style.display = "none";
+  }
+
+  if (UI.screens.gameOver) {
+    UI.screens.gameOver.classList.add("hidden");
+    UI.screens.gameOver.style.display = "none";
+  }
+
+  if (UI.screens.leaderboard) {
+    UI.screens.leaderboard.classList.add("hidden");
+    UI.screens.leaderboard.style.display = "none";
+  }
+
+  if (UI.screens.trails) {
+    UI.screens.trails.classList.add("hidden");
+    UI.screens.trails.style.display = "none";
+  }
 
   // hide initials box when starting
   if (UI.initials.container) UI.initials.container.classList.add("hidden");
@@ -151,10 +181,25 @@ export function showGameOver(finalScore) {
 
   updateHighScoreLabel();
 
-  if (UI.screens.menu) UI.screens.menu.style.display = "none";
-  if (UI.screens.gameOver) UI.screens.gameOver.style.display = "flex";
-  if (UI.screens.leaderboard) UI.screens.leaderboard.style.display = "none";
-  if (UI.screens.trails) UI.screens.trails.style.display = "none";
+  if (UI.screens.menu) {
+    UI.screens.menu.classList.add("hidden");
+    UI.screens.menu.style.display = "none";
+  }
+
+  if (UI.screens.gameOver) {
+    UI.screens.gameOver.classList.remove("hidden");
+    UI.screens.gameOver.style.display = "flex";
+  }
+
+  if (UI.screens.leaderboard) {
+    UI.screens.leaderboard.classList.add("hidden");
+    UI.screens.leaderboard.style.display = "none";
+  }
+
+  if (UI.screens.trails) {
+    UI.screens.trails.classList.add("hidden");
+    UI.screens.trails.style.display = "none";
+  }
 
   // always show initials prompt on game over (simpler for now)
   UI.initials.pendingScore = finalScore;
@@ -170,27 +215,37 @@ export function showGameOver(finalScore) {
 export function showLeaderboard() {
   UI.state = GAME_STATE.LEADERBOARD;
 
-  if (UI.screens.leaderboard)
+  if (UI.screens.leaderboard) {
+    UI.screens.leaderboard.classList.remove("hidden");
     UI.screens.leaderboard.style.display = "flex";
+  }
 
   if (window.loadLeaderboard) window.loadLeaderboard();
 }
 
 export function hideLeaderboard() {
-  if (UI.screens.leaderboard)
+  if (UI.screens.leaderboard) {
+    UI.screens.leaderboard.classList.add("hidden");
     UI.screens.leaderboard.style.display = "none";
+  }
 
   UI.state = GAME_STATE.MENU;
 }
 
 export function showTrails() {
   UI.state = GAME_STATE.TRAILS;
-  if (UI.screens.trails) UI.screens.trails.style.display = "flex";
+  if (UI.screens.trails) {
+    UI.screens.trails.classList.remove("hidden");
+    UI.screens.trails.style.display = "flex";
+  }
   updateTrailList();
 }
 
 export function hideTrails() {
-  if (UI.screens.trails) UI.screens.trails.style.display = "none";
+  if (UI.screens.trails) {
+    UI.screens.trails.classList.add("hidden");
+    UI.screens.trails.style.display = "none";
+  }
   UI.state = GAME_STATE.MENU;
 }
 

@@ -423,10 +423,11 @@ function initThree() {
   scene.add(spot);
 
   setupVideoBackground();
-  createTrack();
-  createFox();
 
   initTrails(scene);
+
+  createTrack();
+  createFox();
 
   window.addEventListener("resize", onResize);
 }

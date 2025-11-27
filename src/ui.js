@@ -1,3 +1,5 @@
+// src/ui.js
+
 import { GAME_STATE, TRAIL_SHOP } from "./constants.js";
 import { player, equipTrail, buyTrail } from "./player.js";
 
@@ -67,7 +69,7 @@ export function initUI() {
 
   UI.trailListContainer = document.getElementById("trail-list");
 
-  // Hook up buttons
+  // Hook buttons
   if (UI.buttons.start) UI.buttons.start.onclick = () => showGame();
   if (UI.buttons.restart) UI.buttons.restart.onclick = () => showGame();
 
@@ -101,14 +103,12 @@ export function initUI() {
         window.qfoxSubmitScore(score, initials);
       }
 
-      // hide form after submit
       if (UI.initials.container) {
         UI.initials.container.classList.add("hidden");
       }
     };
   }
 
-  // Initial HUD text
   updateScoreLabel(player.score);
   updateOrbsLabel();
   updateHighScoreLabel();
@@ -116,85 +116,79 @@ export function initUI() {
 }
 
 // -------------------------------------------------------------
-// STATE TRANSITIONS
+// STATE CHANGE
 // -------------------------------------------------------------
 
 export function showMenu() {
   UI.state = GAME_STATE.MENU;
 
-  if (UI.screens.menu) UI.screens.menu.classList.remove("hidden");
-  if (UI.screens.gameOver) UI.screens.gameOver.classList.add("hidden");
-  if (UI.screens.leaderboard) UI.screens.leaderboard.classList.add("hidden");
-  if (UI.screens.trails) UI.screens.trails.classList.add("hidden");
+  UI.screens.menu?.classList.remove("hidden");
+  UI.screens.gameOver?.classList.add("hidden");
+  UI.screens.leaderboard?.classList.add("hidden");
+  UI.screens.trails?.classList.add("hidden");
 }
 
 export function showGame() {
   UI.state = GAME_STATE.PLAYING;
 
-  if (UI.screens.menu) UI.screens.menu.classList.add("hidden");
-  if (UI.screens.gameOver) UI.screens.gameOver.classList.add("hidden");
-  if (UI.screens.leaderboard) UI.screens.leaderboard.classList.add("hidden");
-  if (UI.screens.trails) UI.screens.trails.classList.add("hidden");
+  UI.screens.menu?.classList.add("hidden");
+  UI.screens.gameOver?.classList.add("hidden");
+  UI.screens.leaderboard?.classList.add("hidden");
+  UI.screens.trails?.classList.add("hidden");
 
-  // hide initials box when starting
-  if (UI.initials.container) UI.initials.container.classList.add("hidden");
+  UI.initials.container?.classList.add("hidden");
 
-  // Game.js will handle resetting game logic
   if (window.startGame) window.startGame();
 }
 
 export function showGameOver(finalScore) {
-  UI.state = GAME_STATE.GAME_OVER();
+  // FIXED — This was the bug. NO parentheses.
+  UI.state = GAME_STATE.GAME_OVER;
 
   if (UI.labels.finalScore)
     UI.labels.finalScore.textContent = finalScore;
 
   updateHighScoreLabel();
 
-  if (UI.screens.menu) UI.screens.menu.classList.add("hidden");
-  if (UI.screens.gameOver) UI.screens.gameOver.classList.remove("hidden");
-  if (UI.screens.leaderboard) UI.screens.leaderboard.classList.add("hidden");
-  if (UI.screens.trails) UI.screens.trails.classList.add("hidden");
+  UI.screens.menu?.classList.add("hidden");
+  UI.screens.gameOver?.classList.remove("hidden");
+  UI.screens.leaderboard?.classList.add("hidden");
+  UI.screens.trails?.classList.add("hidden");
 
+  // Always show initials box
   UI.initials.pendingScore = finalScore;
-  if (UI.initials.container) {
-    UI.initials.container.classList.remove("hidden");
-    if (UI.initials.input) {
-      UI.initials.input.value = "";
-      UI.initials.input.focus();
-    }
+  UI.initials.container?.classList.remove("hidden");
+
+  if (UI.initials.input) {
+    UI.initials.input.value = "";
+    UI.initials.input.focus();
   }
 }
 
 export function showLeaderboard() {
   UI.state = GAME_STATE.LEADERBOARD;
-
-  if (UI.screens.leaderboard)
-    UI.screens.leaderboard.classList.remove("hidden");
-
+  UI.screens.leaderboard?.classList.remove("hidden");
   if (window.loadLeaderboard) window.loadLeaderboard();
 }
 
 export function hideLeaderboard() {
-  if (UI.screens.leaderboard)
-    UI.screens.leaderboard.classList.add("hidden");
-
+  UI.screens.leaderboard?.classList.add("hidden");
   UI.state = GAME_STATE.MENU;
 }
 
 export function showTrails() {
   UI.state = GAME_STATE.TRAILS;
-  if (UI.screens.trails) UI.screens.trails.classList.remove("hidden");
+  UI.screens.trails?.classList.remove("hidden");
   updateTrailList();
 }
 
 export function hideTrails() {
-  if (UI.screens.trails) UI.screens.trails.classList.add("hidden");
+  UI.screens.trails?.classList.add("hidden");
   UI.state = GAME_STATE.MENU;
 }
 
 // -------------------------------------------------------------
-// SCORE & ORBS & HIGHSCORE LABELS
+// LABEL UPDATES
 // -------------------------------------------------------------
 
 export function updateScoreLabel(score) {
@@ -244,7 +238,6 @@ export function updateTrailList() {
     UI.trailListContainer.appendChild(div);
   });
 
-  // Buying / equipping
   UI.trailListContainer.querySelectorAll(".buy-btn").forEach((btn) => {
     btn.onclick = () => {
       const id = btn.dataset.id;
@@ -264,5 +257,3 @@ export function updateTrailList() {
     };
   });
 }
-
-

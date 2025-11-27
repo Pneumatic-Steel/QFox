@@ -1,154 +1,399 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Quantum Fox</title>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Quantum Fox</title>
 
-  <!-- TailwindCSS -->
-  <script src="https://cdn.tailwindcss.com"></script>
+<!-- Tailwind for faster UI styling -->
+<script src="https://cdn.tailwindcss.com"></script>
 
-  <!-- THREE & TWEEN -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/tween.js/23.1.1/tween.umd.js"></script>
+<!-- THREE & TWEEN -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/tween.js/23.1.1/tween.umd.js"></script>
 
-  <link rel="stylesheet" href="style.css" />
+<style>
+    body {
+        margin:0;
+        overflow:hidden;
+        background:#0d1117;
+        font-family: Inter, system-ui, Arial;
+        color:#f3f4f6;
+    }
+    canvas { display:block; }
+
+    /* GLOBAL HIDDEN CLASS */
+    .hidden { display:none !important; }
+
+    /* HUD */
+    #hud {
+        position:absolute;
+        top:0;
+        left:0;
+        right:0;
+        padding:10px 16px;
+        z-index:20;
+        display:flex;
+        justify-content:space-between;
+        pointer-events:none;
+        font-weight:700;
+    }
+    .hud-box {
+        background:rgba(0,0,0,0.7);
+        padding:8px 16px;
+        border-radius:8px;
+        border:2px solid #3b82f6;
+        font-size:1.1rem;
+        min-width:130px;
+        text-align:center;
+    }
+
+    /* TOUCH INDICATOR */
+    #touch-indicator {
+        position:absolute;
+        bottom:20px;
+        left:50%;
+        transform:translateX(-50%);
+        background:rgba(0,0,0,0.7);
+        border:2px solid #3b82f6;
+        color:#fcd34d;
+        padding:8px 16px;
+        border-radius:10px;
+        font-weight:700;
+        pointer-events:none;
+        z-index:15;
+    }
+
+    /* ==========================
+        MENU SCREEN
+       ========================== */
+    #screen-menu {
+        position:absolute;
+        inset:0;
+        background:rgba(0,0,0,0.85);
+        z-index:9999;
+        display:flex;
+        flex-direction:column;
+        justify-content:center;
+        align-items:center;
+        gap:20px;
+    }
+    .menu-button {
+        background:#3b82f6;
+        padding:14px 26px;
+        border:none;
+        border-radius:10px;
+        font-weight:900;
+        font-size:1.4rem;
+        color:white;
+        cursor:pointer;
+        transition:0.25s;
+    }
+    .menu-button:hover {
+        background:#2563eb;
+        transform:translateY(-2px);
+    }
+
+    /* ==========================
+        GAME OVER SCREEN (NEW)
+       ========================== */
+    #screen-gameover {
+        position:absolute;
+        inset:0;
+        background:rgba(0,0,0,0.88);
+        display:flex;
+        flex-direction:column;
+        justify-content:center;
+        align-items:center;
+        text-align:center;
+        opacity:0;
+        transition:opacity .35s ease-in-out;
+        z-index:9999;
+    }
+
+    @keyframes pulse-border {
+        0%   { box-shadow:0 0 0 0 rgba(252,211,77,0.4); }
+        60%  { box-shadow:0 0 0 12px rgba(252,211,77,0); }
+        100% { box-shadow:0 0 0 0 rgba(252,211,77,0); }
+    }
+
+    /* ==========================
+        LEADERBOARD SCREEN
+       ========================== */
+    #screen-leaderboard {
+        position:absolute;
+        inset:0;
+        background:rgba(0,0,0,0.92);
+        z-index:9999;
+        display:none;
+        flex-direction:column;
+        align-items:center;
+        padding-top:60px;
+        overflow-y:auto;
+        opacity:0;
+        transition:opacity .3s ease-in-out;
+    }
+
+    .lb-entry {
+        display:flex;
+        justify-content:space-between;
+        border-bottom:1px dashed #374151;
+        padding:8px 0;
+        width:100%;
+        font-size:1.1rem;
+    }
+    .lb-header {
+        font-weight:900;
+        font-size:1.3rem;
+        color:#fcd34d;
+        border-bottom:2px solid #fcd34d;
+        margin-bottom:12px;
+    }
+
+    /* ==========================
+        TRAIL SHOP
+       ========================== */
+    #screen-trails {
+        position:absolute;
+        inset:0;
+        background:rgba(0,0,0,0.92);
+        z-index:9999;
+        display:none;
+        flex-direction:column;
+        align-items:center;
+        padding:40px 0;
+        overflow-y:auto;
+        opacity:0;
+        transition:opacity .25s;
+    }
+
+    .trail-item {
+        background:rgba(255,255,255,0.05);
+        border:2px solid #3b82f6;
+        padding:14px;
+        border-radius:10px;
+        margin-bottom:12px;
+        width:300px;
+        display:flex;
+        justify-content:space-between;
+        font-weight:700;
+    }
+</style>
 </head>
 
-<body class="bg-black text-white overflow-hidden">
+<body>
 
-  <!-- ============================= -->
-  <!-- MAIN GAME CANVAS -->
-  <!-- ============================= -->
-  <div id="game-container" class="w-full h-full absolute top-0 left-0"></div>
+<!-- HUD -->
+<div id="hud">
+    <div id="label-score" class="hud-box">Score: 0</div>
+    <div id="label-highscore" class="hud-box">High Score: 0</div>
+    <div class="hud-box text-sm">A / D (or Arrows) to Switch Lanes</div>
+</div>
 
-  <!-- ============================= -->
-  <!-- IN-GAME HUD -->
-  <!-- ============================= -->
-  <div id="hud" class="absolute top-2 left-2 space-y-1 pointer-events-none z-20">
-    <div id="label-score" class="px-3 py-1 bg-black/60 rounded">Score: 0</div>
-    <div id="label-highscore" class="px-3 py-1 bg-black/60 rounded">High Score: 0</div>
-    <div id="label-orbs" class="px-3 py-1 bg-black/60 rounded">Orbs: 0</div>
-  </div>
+<div id="touch-indicator">Tap Left / Right to Switch Lanes</div>
 
-  <!-- ============================= -->
-  <!-- MAIN MENU SCREEN -->
-  <!-- ============================= -->
-  <div id="screen-menu"
-       class="absolute inset-0 bg-black/80 flex flex-col items-center justify-center space-y-6 z-30">
+<!-- THREE Canvas Container -->
+<div id="game-container"></div>
 
-    <h1 class="text-5xl font-bold">Quantum Fox</h1>
+<!-- =======================================
+     MENU SCREEN
+======================================= -->
+<div id="screen-menu">
+    <button id="btn-start" class="menu-button">START GAME</button>
+    <button id="btn-leaderboard" class="menu-button">LEADERBOARD</button>
+    <button id="btn-trails" class="menu-button">TRAIL SHOP</button>
+</div>
 
-    <button id="btn-start"
-            class="px-6 py-3 bg-orange-600 hover:bg-orange-700 rounded text-xl">
-      START GAME
-    </button>
+<!-- =======================================
+     GAME OVER SCREEN (FULL NEW STYLE)
+======================================= -->
+<div id="screen-gameover" class="hidden">
 
-    <button id="btn-leaderboard"
-            class="px-6 py-3 bg-blue-600 hover:bg-blue-700 rounded">
-      LEADERBOARD
-    </button>
+    <h1 style="
+        font-size:3.4rem;
+        font-weight:900;
+        color:#ef4444;
+        text-shadow:0 0 18px rgba(239,68,68,0.75);
+        margin-bottom:10px;">
+        GAME OVER
+    </h1>
 
-    <button id="btn-trails"
-            class="px-6 py-3 bg-purple-600 hover:bg-purple-700 rounded">
-      TRAIL SHOP
-    </button>
-
-    <p class="text-gray-300 pt-4 text-center">
-      Controls:<br>
-      A / D or Arrow Keys to Switch Lanes<br>
-      Tap left/right on mobile
-    </p>
-  </div>
-
-  <!-- ============================= -->
-  <!-- GAME OVER SCREEN -->
-  <!-- ============================= -->
-  <div id="screen-gameover"
-       class="absolute inset-0 bg-black/80 hidden flex-col items-center justify-center space-y-4 z-30">
-
-    <h2 class="text-4xl font-bold">GAME OVER</h2>
-
-    <div class="text-2xl">
-      Final Score: <span id="label-finalscore">0</span>
+    <div style="font-size:1.45rem; font-weight:800; margin-bottom:20px;">
+        Final Score:
+        <span id="label-finalscore" style="
+            color:#fbbf24;
+            font-size:2.3rem;
+            font-weight:900;
+            text-shadow:0 0 12px rgba(251,191,36,0.7);">
+            0
+        </span>
     </div>
 
-    <!-- NEW: initials entry for leaderboard -->
-    <div id="initials-container"
-         class="flex flex-col items-center space-y-2 mt-4 hidden">
-      <p class="text-lg">NEW HIGH SCORE! Enter your initials (5 letters):</p>
-      <input
-        id="initials-input"
-        type="text"
-        maxlength="5"
-        class="text-black px-3 py-1 rounded text-center tracking-widest uppercase"
-        placeholder="AAAAA"
-        autocomplete="off"
-      />
-      <button id="btn-submit-score"
-              class="px-4 py-2 bg-yellow-500 hover:bg-yellow-600 rounded">
-        SUBMIT SCORE
-      </button>
+    <!-- INITIALS INPUT -->
+    <div id="initials-container" class="hidden"
+        style="
+            display:flex;
+            flex-direction:column;
+            align-items:center;
+            background:rgba(255,255,255,0.08);
+            padding:20px 26px;
+            border-radius:14px;
+            border:2px solid #fcd34d;
+            margin-bottom:22px;
+            animation:pulse-border 2s infinite;">
+         
+        <div style="font-size:1.2rem; font-weight:800; color:#fcd34d; margin-bottom:10px;">
+            NEW HIGH SCORE!
+        </div>
+
+        <input id="initials-input" maxlength="5" placeholder="_____"
+            style="
+                background:#111827;
+                border:2px solid #4b5563;
+                color:#10b981;
+                font-size:2.2rem;
+                text-align:center;
+                width:260px;
+                border-radius:8px;
+                margin-bottom:14px;
+                text-transform:uppercase;
+                font-family:monospace;
+                letter-spacing:0.18em;">
+
+        <button id="btn-submit-score"
+            style="
+               background:#10b981;
+               color:#064e3b;
+               padding:10px 28px;
+               border-radius:8px;
+               font-weight:900;
+               font-size:1.25rem;
+               cursor:pointer;
+               border:none;
+               transition:all .2s;">
+            SUBMIT
+        </button>
     </div>
 
-    <button id="btn-restart"
-            class="px-6 py-3 bg-green-600 hover:bg-green-700 rounded text-xl">
-      RESTART
-    </button>
+    <!-- BUTTON ROW -->
+    <div style="display:flex; gap:20px;">
 
-    <!-- NOTE: different id from menu button -->
-    <button id="btn-leaderboard-2"
-            class="px-6 py-3 bg-blue-600 hover:bg-blue-700 rounded">
-      LEADERBOARD
-    </button>
-  </div>
+        <button id="btn-restart"
+            style="
+                padding:12px 24px;
+                background:#fcd34d;
+                color:#111827;
+                border-radius:10px;
+                border:none;
+                font-weight:900;
+                font-size:1.25rem;
+                cursor:pointer;
+                transition:all .2s;">
+            RESTART
+        </button>
 
-  <!-- ============================= -->
-  <!-- LEADERBOARD SCREEN -->
-  <!-- ============================= -->
-  <div id="screen-leaderboard"
-       class="absolute inset-0 bg-black/90 hidden flex flex-col items-center p-6 z-40">
-
-    <button id="btn-close-leaderboard"
-            class="self-end px-4 py-2 bg-red-600 hover:bg-red-700 rounded mb-4">
-      CLOSE
-    </button>
-
-    <h2 class="text-3xl font-bold mb-4">TOP 100 PLAYERS</h2>
-
-    <div id="leaderboard-list"
-         class="w-full max-w-xl bg-black/40 p-3 rounded overflow-y-auto space-y-2"
-         style="height: 70vh;">
-      Loading...
+        <button id="btn-leaderboard-2"
+            style="
+                padding:12px 24px;
+                background:#3b82f6;
+                color:white;
+                border-radius:10px;
+                border:none;
+                font-weight:900;
+                font-size:1.25rem;
+                cursor:pointer;
+                transition:all .2s;">
+            LEADERBOARD
+        </button>
     </div>
-  </div>
+</div>
 
-  <!-- ============================= -->
-  <!-- TRAIL SHOP SCREEN -->
-  <!-- ============================= -->
-  <div id="screen-trails"
-       class="absolute inset-0 bg-black/90 hidden flex flex-col items-center p-6 z-40">
+<!-- =======================================
+     LEADERBOARD SCREEN
+======================================= -->
+<div id="screen-leaderboard">
+
+    <button id="btn-close-leaderboard" 
+        style="
+            position:absolute;
+            top:20px;
+            right:20px;
+            padding:10px 20px;
+            font-size:1.3rem;
+            background:#ef4444;
+            color:white;
+            border:none;
+            border-radius:10px;
+            font-weight:900;
+            cursor:pointer;">
+        ✕ CLOSE
+    </button>
+
+    <h1 style="font-size:3rem; font-weight:900; color:#10b981; margin-bottom:20px;">
+        TOP 100 RUNNERS
+    </h1>
+
+    <div style="
+        width:90%;
+        max-width:600px;
+        background:rgba(0,0,0,0.7);
+        padding:20px;
+        border-radius:10px;
+        border:2px solid #10b981;
+        max-height:70vh;
+        overflow-y:auto;">
+
+        <div class="lb-entry lb-header">
+            <span style="width:10%; text-align:center;">#</span>
+            <span style="width:30%;">INITIALS</span>
+            <span style="width:30%; text-align:right;">SCORE</span>
+        </div>
+
+        <div id="leaderboard-list">Loading...</div>
+
+    </div>
+</div>
+
+<!-- =======================================
+     TRAIL SHOP
+======================================= -->
+<div id="screen-trails">
 
     <button id="btn-close-trails"
-            class="self-end px-4 py-2 bg-red-600 hover:bg-red-700 rounded mb-4">
-      CLOSE
+        style="
+            position:absolute;
+            top:20px;
+            right:20px;
+            background:#ef4444;
+            color:white;
+            font-weight:900;
+            border:none;
+            border-radius:10px;
+            padding:8px 16px;
+            font-size:1.1rem;">
+        ✕ CLOSE
     </button>
 
-    <h2 class="text-3xl font-bold mb-4">Trail Shop</h2>
-    <p class="mb-2 text-gray-400">Unlock and equip different trail effects.</p>
+    <h1 style="font-size:3rem; color:#3b82f6; font-weight:900; margin-bottom:20px;">
+        TRAIL SHOP
+    </h1>
 
-    <div id="trail-list"
-         class="w-full max-w-xl bg-black/40 p-4 rounded overflow-y-auto space-y-4"
-         style="height: 70vh;">
-      <!-- trails inserted dynamically -->
-    </div>
+    <div id="trail-list" style="width:300px;"></div>
 
-  </div>
+</div>
 
-  <!-- ============================= -->
-  <!-- JAVASCRIPT ENGINE -->
-  <!-- ============================= -->
-  <script type="module" src="src/game.js"></script>
+<!-- GAME SCRIPTS -->
+<script type="module" src="constants.js"></script>
+<script type="module" src="assets.js"></script>
+<script type="module" src="player.js"></script>
+<script type="module" src="difficulty.js"></script>
+<script type="module" src="obstacles.js"></script>
+<script type="module" src="powerups.js"></script>
+<script type="module" src="trails.js"></script>
+<script type="module" src="collisions.js"></script>
+<script type="module" src="firebase.js"></script>
+<script type="module" src="ui.js"></script>
+<script type="module" src="game.js"></script>
 
 </body>
 </html>

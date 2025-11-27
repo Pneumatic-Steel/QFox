@@ -1,82 +1,118 @@
-// trails.js
-import * as THREE from "https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.module.js";
+import { TRAIL_IDS } from "./constants.js";
 import { player } from "./player.js";
 
+// Simple vertical Tron-style trail panel behind the fox.
+
+let sceneRef = null;
+let foxRef = null;
 let trailMesh = null;
-let trailColor = new THREE.Color(0x00ffff); // default
-let trailGroup = null;
+let trailMaterial = null;
 
-// Which trails exist
-export const TRAILS = {
-  default: { name: "Default Energy", color1: "#00ffff", color2: "#0088ff" },
-  flame:   { name: "Fox Flame",     color1: "#ff8800", color2: "#ff0044" },
-  neon:    { name: "Neon Pulse",    color1: "#00ff88", color2: "#0066ff" },
-  royal:   { name: "Royal Burst",   color1: "#8866ff", color2: "#ff44ff" },
-  gold:    { name: "Golden Fox",    color1: "#ffcc00", color2: "#ff8800" },
-};
-
-// Called from game.js AFTER scene & fox exist
-export function initTrail(scene) {
-  trailGroup = new THREE.Group();
-  scene.add(trailGroup);
-
-  // long vertical glowing card
-  const geo = new THREE.PlaneGeometry(0.8, 4, 1, 1);
-
-  const mat = new THREE.MeshBasicMaterial({
-    color: trailColor,
-    transparent: true,
-    blending: THREE.AdditiveBlending,
-    opacity: 0.7,
-    depthWrite: false,
-    side: THREE.DoubleSide,
-  });
-
-  trailMesh = new THREE.Mesh(geo, mat);
-
-  // stand vertical
-  trailMesh.rotation.y = Math.PI; 
-  trailGroup.add(trailMesh);
+export function initTrails(scene) {
+  sceneRef = scene;
+  if (sceneRef && foxRef && !trailMesh) {
+    createTrailMesh();
+  }
 }
 
-// Update trail color when new trail selected
-export function applyEquippedTrail(name) {
-  const t = TRAILS[name] || TRAILS.default;
+export function setTrailFox(foxMesh) {
+  foxRef = foxMesh;
+  if (sceneRef && foxRef && !trailMesh) {
+    createTrailMesh();
+  }
+}
 
-  // gradient color pulse between 2 colors
-  player.trailInfo = {
-    t,
-    pulseTime: 0,
-    c1: new THREE.Color(t.color1),
-    c2: new THREE.Color(t.color2),
-  };
+function createTrailMesh() {
+  // Vertical panel behind the fox: width x height
+  const geo = new THREE.PlaneGeometry(1.6, 5.0, 1, 1);
+
+  trailMaterial = new THREE.MeshBasicMaterial({
+    color: 0x00ffff,
+    transparent: true,
+    opacity: 0.75,
+    side: THREE.DoubleSide,
+    depthWrite: false,
+    blending: THREE.AdditiveBlending,
+  });
+
+  trailMesh = new THREE.Mesh(geo, trailMaterial);
+  trailMesh.renderOrder = 0; // behind fox & orbs
+
+  if (sceneRef) {
+    sceneRef.add(trailMesh);
+  }
+}
+
+// Pick base colors for each trail ID
+function getTrailColors(trailId) {
+  switch (trailId) {
+    case TRAIL_IDS.DEMON:
+      return [0xff0000, 0xff6600]; // red → orange
+    case TRAIL_IDS.PIXEL:
+      return [0x00ffff, 0x00ff88]; // cyan → green
+    case TRAIL_IDS.GOLD:
+      return [0xffd700, 0xff8c00]; // gold → orange
+    case TRAIL_IDS.GALAXY:
+      return [0x8b5cf6, 0x22d3ee]; // purple → teal
+    case TRAIL_IDS.FIRE:
+      return [0xff4500, 0xffff00]; // red-orange → yellow
+    case TRAIL_IDS.ICE:
+      return [0xa0ffff, 0xffffff]; // cyan → white
+    case TRAIL_IDS.LIGHTNING:
+      return [0x7df9ff, 0xffffff]; // electric blue → white
+    case TRAIL_IDS.DUST:
+      return [0xcbd5f5, 0x9ca3af]; // dusty blue/gray
+    case TRAIL_IDS.POISON:
+      return [0x22c55e, 0xa3e635]; // toxic green
+    case TRAIL_IDS.AURORA:
+      return [0x22c1c3, 0xfdbb2d]; // aurora blend
+    case TRAIL_IDS.SHADOW:
+      return [0x111827, 0x4b5563]; // dark smoke
+    case TRAIL_IDS.SOUL:
+      return [0x6366f1, 0x22d3ee]; // soul flame
+    case TRAIL_IDS.DIAMOND:
+      return [0xe0f2fe, 0xffffff]; // icy white
+    case TRAIL_IDS.SOLAR:
+      return [0xfff000, 0xff4b1f]; // yellow → solar flare
+    default:
+      // Default "QFox" teal/blue
+      return [0x00ffff, 0x0088ff];
+  }
 }
 
 // Called every frame from game.js
-export function updateTrail(delta, fox) {
-  if (!trailMesh || !fox || !player.trailInfo) return;
+export function updateTrail(deltaTime, score) {
+  if (!trailMesh || !foxRef) return;
 
-  const info = player.trailInfo;
-  info.pulseTime += delta * 2;
-
-  // interpolate color (shimmer shift)
-  const f = (Math.sin(info.pulseTime) + 1) / 2;
-  const col = info.c1.clone().lerp(info.c2, f);
-
-  trailMesh.material.color.copy(col);
-  trailMesh.material.opacity = 0.55 + f * 0.45;
-
-  // position trail directly behind fox
-  trailGroup.position.set(
-    fox.position.x,
-    fox.position.y + 0.2,       // center vertically
-    fox.position.z + 0.9        // slight behind
+  // Position the panel slightly behind and around the fox
+  trailMesh.position.set(
+    foxRef.position.x,
+    foxRef.position.y + 1.2,      // center vertically around fox
+    foxRef.position.z + 1.2       // just behind fox
   );
 
-  // face camera nicely
-  trailGroup.lookAt(
-    fox.position.x,
-    fox.position.y + 2,
-    fox.position.z - 10
+  // Make the panel stand vertical like a Tron wall,
+  // facing roughly toward the camera
+  trailMesh.lookAt(
+    foxRef.position.x,
+    foxRef.position.y + 1.2,
+    foxRef.position.z - 10
   );
+
+  // Color pulse based on equipped trail
+  const trailId = player.equippedTrailId || TRAIL_IDS.DEFAULT;
+  const [c1Hex, c2Hex] = getTrailColors(trailId);
+  const c1 = new THREE.Color(c1Hex);
+  const c2 = new THREE.Color(c2Hex);
+
+  const t = performance.now() * 0.001;
+  const pulse = (Math.sin(t * 2.4) + 1) / 2; // 0..1
+  const color = c1.clone().lerp(c2, pulse);
+
+  trailMaterial.color.copy(color);
+  trailMaterial.opacity = 0.4 + 0.4 * pulse;
+
+  // Stretch trail length a bit with score for extra drama
+  const lengthScale = 1.0 + Math.min(score / 800, 1.5); // max 2.5x
+  trailMesh.scale.set(1.0, lengthScale, 1.0);
 }

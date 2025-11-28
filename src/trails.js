@@ -1,7 +1,6 @@
 import { TRAIL_IDS } from "./constants.js";
-import { player } from "./player.js";
+import { player } from "./player.js"; // Import the player object
 
-// Internal state
 let sceneRef = null;
 let foxRef = null;
 
@@ -11,26 +10,35 @@ let trailGeometry = null;
 let trailMesh = null;
 
 export function setTrailFox(foxMesh) {
-  if (!foxMesh) return;  // Ensure foxMesh exists
+  if (!foxMesh) return; // Ensure the fox mesh exists before proceeding
 
-  foxRef = foxMesh;  // Set the fox reference
-  maybeInitTrail();  // Initialize the trail if not already initialized
+  // Set the fox reference if not already set
+  foxRef = foxMesh;
+
+  // Get the correct trail ID based on the equipped trail
+  const trailId = player.equippedTrailId;
+  
+  // Initialize the trail with the proper colors based on the trail ID
+  const trailColors = getColorsForTrail(trailId); // Function to return trail colors based on equipped trail
+
+  // Create or update the trail geometry and material for the new trail
+  if (!trailInitialized) {
+    initRibbonTrail(); // Initialize if not already initialized
+  } else {
+    // If the trail is already initialized, just update its color
+    trailMesh.material.color.set(trailColors[0]);
+    trailMesh.geometry.attributes.color.needsUpdate = true;
+  }
 }
 
-function maybeInitTrail() {
-  if (!sceneRef || !foxRef || trailInitialized) return;
-  initRibbonTrail();  // Initialize the ribbon trail
-}
-
-// Initialize the ribbon trail
 function initRibbonTrail() {
-  trailInitialized = true;
+  trailInitialized = true;  // Set the flag to indicate the trail is initialized
 
   trailPoints = [];
   const startPos = foxRef.position.clone();
-  startPos.y += 0.35; // Slight lift above floor
+  startPos.y += 0.35; // Slight lift above the floor for the trail
 
-  // Initialize trail to fox position so it doesn't explode on first frame
+  // Initialize trail to the current position of the fox
   for (let i = 0; i < 40; i++) {
     trailPoints.push(startPos.clone());
   }
@@ -54,11 +62,11 @@ function initRibbonTrail() {
     transparent: true,
     depthWrite: false,
     blending: THREE.AdditiveBlending,
-    side: THREE.DoubleSide
+    side: THREE.DoubleSide,
   });
 
   trailMesh = new THREE.Mesh(trailGeometry, material);
-  trailMesh.renderOrder = 0;
+  trailMesh.renderOrder = 0; // Ensure the trail is rendered on top of other objects
   sceneRef.add(trailMesh);
 }
 
@@ -89,7 +97,7 @@ export function updateTrail(deltaFrames, score) {
   if (!trailInitialized || !foxRef) return;
 
   const head = foxRef.position.clone();
-  head.y += 0.35;  // Slight lift above floor
+  head.y += 0.35;  // Slight lift above the floor
 
   trailPoints.unshift(head);
   if (trailPoints.length > 40) {

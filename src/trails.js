@@ -1,5 +1,23 @@
+// TRON-STYLE TRAIL
+
 import { TRAIL_IDS } from "./constants.js";
-import { player } from "./player.js"; // Import the player object
+import { player } from "./player.js";
+
+/* ============================================
+   TRAIL CONFIG
+============================================ */
+
+const TRAIL_SEGMENTS = 40;       // more = smoother ribbon
+const TRAIL_BASE_WIDTH = 0.9;    // widest near the fox
+const TRAIL_MIN_WIDTH = 0.05;    // thinnest at the tail
+const TRAIL_SMOOTH = 0.28;       // how much the ribbon bends
+const TRAIL_Z_OFFSET = 1.2;      // how far behind fox
+const TRAIL_Y_OFFSET = 0.35;     // slight lift above floor
+const TRAIL_LENGTH = 18.0;       // full length behind fox
+
+/* ============================================
+   INTERNAL STATE
+============================================ */
 
 let sceneRef = null;
 let foxRef = null;
@@ -9,49 +27,50 @@ let trailPoints = [];
 let trailGeometry = null;
 let trailMesh = null;
 
-export function setTrailFox(foxMesh) {
-  if (!foxMesh) return; // Ensure the fox mesh exists before proceeding
+/* ============================================
+   INITIALIZATION
+============================================ */
 
-  // Set the fox reference if not already set
-  foxRef = foxMesh;
-
-  // Get the correct trail ID based on the equipped trail
-  const trailId = player.equippedTrailId;
-  
-  // Initialize the trail with the proper colors based on the trail ID
-  const trailColors = getColorsForTrail(trailId); // Function to return trail colors based on equipped trail
-
-  // Create or update the trail geometry and material for the new trail
-  if (!trailInitialized) {
-    initRibbonTrail(); // Initialize if not already initialized
-  } else {
-    // If the trail is already initialized, just update its color
-    trailMesh.material.color.set(trailColors[0]);
-    trailMesh.geometry.attributes.color.needsUpdate = true;
-  }
+export function initTrails(scene) {
+  sceneRef = scene;
+  maybeInitTrail();
 }
 
+export function setTrailFox(foxMesh) {
+  foxRef = foxMesh;
+  maybeInitTrail();
+}
+
+function maybeInitTrail() {
+  if (!sceneRef || !foxRef || trailInitialized) return;
+  initRibbonTrail();
+}
+
+/* ============================================
+   CREATE RIBBON TRAIL
+============================================ */
+
 function initRibbonTrail() {
-  trailInitialized = true;  // Set the flag to indicate the trail is initialized
+  trailInitialized = true;
 
   trailPoints = [];
   const startPos = foxRef.position.clone();
-  startPos.y += 0.35; // Slight lift above the floor for the trail
+  startPos.y += TRAIL_Y_OFFSET;
 
-  // Initialize trail to the current position of the fox
-  for (let i = 0; i < 40; i++) {
+  // Initialize trail to fox position so it doesn't explode on first frame
+  for (let i = 0; i < TRAIL_SEGMENTS; i++) {
     trailPoints.push(startPos.clone());
   }
 
-  const posArr = new Float32Array(40 * 2 * 3);  // 40 trail segments, each has 2 points (left, right)
-  const colArr = new Float32Array(40 * 2 * 3);
+  const posArr = new Float32Array(TRAIL_SEGMENTS * 2 * 3);
+  const colArr = new Float32Array(TRAIL_SEGMENTS * 2 * 3);
 
   trailGeometry = new THREE.BufferGeometry();
   trailGeometry.setAttribute("position", new THREE.BufferAttribute(posArr, 3));
   trailGeometry.setAttribute("color", new THREE.BufferAttribute(colArr, 3));
 
   const indices = [];
-  for (let i = 0; i < 39; i++) {
+  for (let i = 0; i < TRAIL_SEGMENTS - 1; i++) {
     const a = i * 2;
     indices.push(a, a + 1, a + 2, a + 1, a + 3, a + 2);
   }
@@ -62,15 +81,18 @@ function initRibbonTrail() {
     transparent: true,
     depthWrite: false,
     blending: THREE.AdditiveBlending,
-    side: THREE.DoubleSide,
+    side: THREE.DoubleSide
   });
 
   trailMesh = new THREE.Mesh(trailGeometry, material);
-  trailMesh.renderOrder = 0; // Ensure the trail is rendered on top of other objects
+  trailMesh.renderOrder = 0;
   sceneRef.add(trailMesh);
 }
 
-// Get the colors based on the trail ID
+/* ============================================
+   TRAIL COLOR LOOKUP (mapped to your shop IDs)
+============================================ */
+
 function getColorsForTrail(trailId) {
   switch (trailId) {
     case TRAIL_IDS.DEMON: return [0xff0000, 0xff6600];
@@ -87,32 +109,37 @@ function getColorsForTrail(trailId) {
     case TRAIL_IDS.SOUL: return [0x6366f1, 0x22d3ee];
     case TRAIL_IDS.DIAMOND: return [0xe0f2fe, 0xffffff];
     case TRAIL_IDS.SOLAR: return [0xfff000, 0xff4b1f];
+
     default:
-      return [0x00ffff, 0x0088ff];  // Default color if not matched
+      return [0x00ffff, 0x0088ff];
   }
 }
 
-// Update the trail position and color every frame
+/* ============================================
+   UPDATE TRAIL — CALLED EVERY FRAME
+============================================ */
+
 export function updateTrail(deltaFrames, score) {
   if (!trailInitialized || !foxRef) return;
 
   const head = foxRef.position.clone();
-  head.y += 0.35;  // Slight lift above the floor
+  head.y += TRAIL_Y_OFFSET;
 
   trailPoints.unshift(head);
-  if (trailPoints.length > 40) {
+  if (trailPoints.length > TRAIL_SEGMENTS) {
     trailPoints.pop();
   }
 
   // Smooth out the trail positions as it moves
   for (let i = 1; i < trailPoints.length; i++) {
-    trailPoints[i].lerp(trailPoints[i - 1], 0.28);  // Smoothing factor
+    trailPoints[i].lerp(trailPoints[i - 1], TRAIL_SMOOTH);
   }
 
   const pos = trailGeometry.attributes.position.array;
   const col = trailGeometry.attributes.color.array;
 
-  const [c1Hex, c2Hex] = getColorsForTrail(player.equippedTrailId);  // Get the colors based on equipped trail
+  // Get colors based on trail ID
+  const [c1Hex, c2Hex] = getColorsForTrail(player.equippedTrailId);
   const colorA = new THREE.Color(c1Hex);
   const colorB = new THREE.Color(c2Hex);
 
@@ -121,8 +148,8 @@ export function updateTrail(deltaFrames, score) {
   const headColor = colorA.clone().lerp(colorB, tPulse);
 
   // Loop through trail points to update position, color, and width
-  for (let i = 0; i < 39; i++) {
-    const tSeg = i / 39;
+  for (let i = 0; i < TRAIL_SEGMENTS - 1; i++) {
+    const tSeg = i / (TRAIL_SEGMENTS - 1);
 
     const p = trailPoints[i];
     const pNext = trailPoints[i + 1];
@@ -135,7 +162,7 @@ export function updateTrail(deltaFrames, score) {
     side.normalize();
 
     // Taper the trail width from front (fox) to tail
-    const width = THREE.MathUtils.lerp(0.9, 0.05, tSeg);
+    const width = THREE.MathUtils.lerp(TRAIL_BASE_WIDTH, TRAIL_MIN_WIDTH, tSeg);
     const half = width * 0.5;
     const offset = side.multiplyScalar(half);
 
@@ -145,9 +172,10 @@ export function updateTrail(deltaFrames, score) {
     L.y -= half;
     R.y -= half;
 
-    const stretch = 18.0 * tSeg;
-    L.z += (1.2 + stretch);
-    R.z += (1.2 + stretch);
+    // Stretch the trail as it moves
+    const stretch = TRAIL_LENGTH * tSeg;
+    L.z += (TRAIL_Z_OFFSET + stretch);
+    R.z += (TRAIL_Z_OFFSET + stretch);
 
     const idx = i * 2;
 

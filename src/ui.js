@@ -1,6 +1,7 @@
-import { GAME_STATE, TRAIL_SHOP } from "./constants.js";
+import { TRAIL_SHOP } from "./constants.js";
 import { player, equipTrail, buyTrail } from "./player.js";
 
+// Your existing UI structure
 export const UI = {
   state: GAME_STATE.MENU,
 
@@ -35,7 +36,7 @@ export const UI = {
     pendingScore: 0,
   },
 
-  trailListContainer: null,
+  trailListContainer: null, // where trail list will appear
 };
 
 export function initUI() {

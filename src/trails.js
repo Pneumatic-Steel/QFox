@@ -1,4 +1,4 @@
-// REAL RIBBON TRAIL — ported from game (1).js and adapted for modular engine
+// TRON-STYLE TRAIL
 
 import { TRAIL_IDS } from "./constants.js";
 import { player } from "./player.js";

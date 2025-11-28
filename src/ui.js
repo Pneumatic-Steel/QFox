@@ -1,5 +1,3 @@
-// ui.js
-
 import { TRAIL_SHOP } from "./constants.js";
 import { player, equipTrail, buyTrail } from "./player.js";
 
@@ -41,7 +39,11 @@ export const UI = {
   trailListContainer: null, // where trail list will appear
 };
 
-// Initialize the UI elements and button handlers
+// Ensure DOM is fully loaded before initializing UI
+document.addEventListener("DOMContentLoaded", () => {
+  initUI();
+});
+
 export function initUI() {
   // Screens
   UI.screens.menu = document.getElementById("screen-menu");

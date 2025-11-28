@@ -1,15 +1,16 @@
-import { TRAIL_SHOP } from "./constants.js";
+import { GAME_STATE, TRAIL_SHOP } from "./constants.js";
 import { player, equipTrail, buyTrail } from "./player.js";
 
-// UI structure (no changes here)
 export const UI = {
   state: GAME_STATE.MENU,
+
   screens: {
     menu: null,
     gameOver: null,
     leaderboard: null,
     trails: null,
   },
+
   buttons: {
     start: null,
     restart: null,
@@ -19,23 +20,23 @@ export const UI = {
     trailsOpen: null,
     trailsClose: null,
   },
+
   labels: {
     score: null,
     highScore: null,
     finalScore: null,
     orbs: null,
   },
+
   initials: {
     container: null,
     input: null,
     submit: null,
     pendingScore: 0,
   },
+
   trailListContainer: null,
 };
-
-// Ensure that the DOM is loaded before initializing the UI
-document.addEventListener("DOMContentLoaded", initUI);
 
 export function initUI() {
   // Screens
@@ -66,39 +67,61 @@ export function initUI() {
 
   UI.trailListContainer = document.getElementById("trail-list");
 
-  // Button event listeners
-  if (UI.buttons.start) {
-    UI.buttons.start.onclick = () => showGame();
-  }
-  if (UI.buttons.restart) {
-    UI.buttons.restart.onclick = () => showGame();
-  }
-  if (UI.buttons.leaderboardOpen) {
+  // Hook up buttons
+  if (UI.buttons.start) UI.buttons.start.onclick = () => showGame();
+  if (UI.buttons.restart) UI.buttons.restart.onclick = () => showGame();
+
+  if (UI.buttons.leaderboardOpen)
     UI.buttons.leaderboardOpen.onclick = () => showLeaderboard();
-  }
-  if (UI.buttons.leaderboardOpen2) {
+
+  if (UI.buttons.leaderboardOpen2)
     UI.buttons.leaderboardOpen2.onclick = () => showLeaderboard();
-  }
-  if (UI.buttons.leaderboardClose) {
+
+  if (UI.buttons.leaderboardClose)
     UI.buttons.leaderboardClose.onclick = () => hideLeaderboard();
-  }
-  if (UI.buttons.trailsOpen) {
+
+  if (UI.buttons.trailsOpen)
     UI.buttons.trailsOpen.onclick = () => showTrails();
-  }
-  if (UI.buttons.trailsClose) {
+
+  if (UI.buttons.trailsClose)
     UI.buttons.trailsClose.onclick = () => hideTrails();
+
+  // Initials submit
+  if (UI.initials.submit) {
+    UI.initials.submit.onclick = () => {
+      const raw = (UI.initials.input.value || "")
+        .toUpperCase()
+        .replace(/[^A-Z]/g, "")
+        .slice(0, 5);
+
+      const initials = raw || "AAAAA";
+      const score = UI.initials.pendingScore || 0;
+
+      if (window.qfoxSubmitScore) {
+        window.qfoxSubmitScore(score, initials);
+      }
+
+      // hide form after submit
+      if (UI.initials.container) {
+        UI.initials.container.classList.add("hidden");
+      }
+    };
   }
 
-  // Initial HUD text update
+  // Initial HUD text
   updateScoreLabel(player.score);
   updateOrbsLabel();
   updateHighScoreLabel();
   updateTrailList();
 }
 
-// State transitions for different screens
+// -------------------------------------------------------------
+// STATE TRANSITIONS
+// -------------------------------------------------------------
+
 export function showMenu() {
   UI.state = GAME_STATE.MENU;
+
   if (UI.screens.menu) UI.screens.menu.classList.remove("hidden");
   if (UI.screens.gameOver) UI.screens.gameOver.classList.add("hidden");
   if (UI.screens.leaderboard) UI.screens.leaderboard.classList.add("hidden");
@@ -107,12 +130,13 @@ export function showMenu() {
 
 export function showGame() {
   UI.state = GAME_STATE.PLAYING;
+
   if (UI.screens.menu) UI.screens.menu.classList.add("hidden");
   if (UI.screens.gameOver) UI.screens.gameOver.classList.add("hidden");
   if (UI.screens.leaderboard) UI.screens.leaderboard.classList.add("hidden");
   if (UI.screens.trails) UI.screens.trails.classList.add("hidden");
 
-  // Hide initials box when starting
+  // hide initials box when starting
   if (UI.initials.container) UI.initials.container.classList.add("hidden");
 
   // Game.js will handle resetting game logic
@@ -120,8 +144,12 @@ export function showGame() {
 }
 
 export function showGameOver(finalScore) {
+  // FIXED — no () here
   UI.state = GAME_STATE.GAME_OVER;
-  if (UI.labels.finalScore) UI.labels.finalScore.textContent = finalScore;
+
+  if (UI.labels.finalScore)
+    UI.labels.finalScore.textContent = finalScore;
+
   updateHighScoreLabel();
 
   if (UI.screens.menu) UI.screens.menu.classList.add("hidden");
@@ -141,12 +169,17 @@ export function showGameOver(finalScore) {
 
 export function showLeaderboard() {
   UI.state = GAME_STATE.LEADERBOARD;
-  if (UI.screens.leaderboard) UI.screens.leaderboard.classList.remove("hidden");
+
+  if (UI.screens.leaderboard)
+    UI.screens.leaderboard.classList.remove("hidden");
+
   if (window.loadLeaderboard) window.loadLeaderboard();
 }
 
 export function hideLeaderboard() {
-  if (UI.screens.leaderboard) UI.screens.leaderboard.classList.add("hidden");
+  if (UI.screens.leaderboard)
+    UI.screens.leaderboard.classList.add("hidden");
+
   UI.state = GAME_STATE.MENU;
 }
 
@@ -161,22 +194,32 @@ export function hideTrails() {
   UI.state = GAME_STATE.MENU;
 }
 
-// Score and high score updates
+// -------------------------------------------------------------
+// SCORE & ORBS & HIGHSCORE LABELS
+// -------------------------------------------------------------
+
 export function updateScoreLabel(score) {
-  if (UI.labels.score) UI.labels.score.textContent = `Score: ${score}`;
+  if (UI.labels.score)
+    UI.labels.score.textContent = `Score: ${score}`;
 }
 
 export function updateHighScoreLabel() {
-  if (UI.labels.highScore) UI.labels.highScore.textContent = `High Score: ${player.highScore}`;
+  if (UI.labels.highScore)
+    UI.labels.highScore.textContent = `High Score: ${player.highScore}`;
 }
 
 export function updateOrbsLabel() {
-  if (UI.labels.orbs) UI.labels.orbs.textContent = `Orbs: ${player.orbs}`;
+  if (UI.labels.orbs)
+    UI.labels.orbs.textContent = `Orbs: ${player.orbs}`;
 }
 
-// Trail shop update
+// -------------------------------------------------------------
+// TRAIL SHOP UI
+// -------------------------------------------------------------
+
 export function updateTrailList() {
   if (!UI.trailListContainer) return;
+
   UI.trailListContainer.innerHTML = "";
 
   TRAIL_SHOP.forEach((trail) => {
@@ -202,6 +245,7 @@ export function updateTrailList() {
     UI.trailListContainer.appendChild(div);
   });
 
+  // Buying / equipping
   UI.trailListContainer.querySelectorAll(".buy-btn").forEach((btn) => {
     btn.onclick = () => {
       const id = btn.dataset.id;

@@ -137,13 +137,13 @@ export function buyTrail(trailId) {
 
 // Equip a new trail and ensure that it is rendered immediately
 export function equipTrail(trailId) {
-  if (!player.trailUnlocks[trailId]) return false;  // Check if the trail is unlocked
-  player.equippedTrailId = trailId;  // Set the equipped trail ID
-  savePlayerToStorage();  // Save equipped trail to localStorage
+  if (!player.trailUnlocks[trailId]) return false;  // Ensure the trail is unlocked
+  player.equippedTrailId = trailId;  // Set the equipped trail
+  savePlayerToStorage();  // Save the equipped trail
 
-  // Update the trail in the scene after equipping the new trail
+  // Update the trail rendering in the game
   if (foxPlayer) {
-    setTrailFox(foxPlayer);  // Ensure that the trail is rendered based on the equipped trail
+    setTrailFox(foxPlayer);  // Refresh the trail rendering with the newly equipped trail
   }
 
   return true;

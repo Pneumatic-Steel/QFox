@@ -1,4 +1,3 @@
-// src/trails.js
 // REAL RIBBON TRAIL — ported from game (1).js and adapted for modular engine
 
 import { TRAIL_IDS } from "./constants.js";
@@ -58,6 +57,7 @@ function initRibbonTrail() {
   const startPos = foxRef.position.clone();
   startPos.y += TRAIL_Y_OFFSET;
 
+  // Initialize trail to fox position so it doesn't explode on first frame
   for (let i = 0; i < TRAIL_SEGMENTS; i++) {
     trailPoints.push(startPos.clone());
   }
@@ -130,6 +130,7 @@ export function updateTrail(deltaFrames, score) {
     trailPoints.pop();
   }
 
+  // Smooth out the trail positions as it moves
   for (let i = 1; i < trailPoints.length; i++) {
     trailPoints[i].lerp(trailPoints[i - 1], TRAIL_SMOOTH);
   }
@@ -137,25 +138,30 @@ export function updateTrail(deltaFrames, score) {
   const pos = trailGeometry.attributes.position.array;
   const col = trailGeometry.attributes.color.array;
 
+  // Get colors based on trail ID
   const [c1Hex, c2Hex] = getColorsForTrail(player.equippedTrailId);
   const colorA = new THREE.Color(c1Hex);
   const colorB = new THREE.Color(c2Hex);
 
+  // Pulse effect on the trail color
   const tPulse = (Math.sin(performance.now() * 0.0025) + 1) / 2;
   const headColor = colorA.clone().lerp(colorB, tPulse);
 
+  // Loop through trail points to update position, color, and width
   for (let i = 0; i < TRAIL_SEGMENTS - 1; i++) {
     const tSeg = i / (TRAIL_SEGMENTS - 1);
 
     const p = trailPoints[i];
     const pNext = trailPoints[i + 1];
 
+    // Direction of the trail
     const dir = new THREE.Vector3().subVectors(pNext, p);
-    let side = new THREE.Vector3().crossVectors(new THREE.Vector3(0, 1, 0), dir);
+    let side = new THREE.Vector3().crossVectors(dir, new THREE.Vector3(0, 1, 0));
 
     if (side.lengthSq() < 1e-6) side.set(1, 0, 0);
     side.normalize();
 
+    // Taper the trail width from front (fox) to tail
     const width = THREE.MathUtils.lerp(TRAIL_BASE_WIDTH, TRAIL_MIN_WIDTH, tSeg);
     const half = width * 0.5;
     const offset = side.multiplyScalar(half);
@@ -166,12 +172,14 @@ export function updateTrail(deltaFrames, score) {
     L.y -= half;
     R.y -= half;
 
+    // Stretch the trail as it moves
     const stretch = TRAIL_LENGTH * tSeg;
     L.z += (TRAIL_Z_OFFSET + stretch);
     R.z += (TRAIL_Z_OFFSET + stretch);
 
     const idx = i * 2;
 
+    // Set the positions for each segment of the trail
     pos[idx * 3 + 0] = L.x;
     pos[idx * 3 + 1] = L.y;
     pos[idx * 3 + 2] = L.z;
@@ -180,6 +188,7 @@ export function updateTrail(deltaFrames, score) {
     pos[(idx + 1) * 3 + 1] = R.y;
     pos[(idx + 1) * 3 + 2] = R.z;
 
+    // Apply the color with fading from front to tail
     const fade = THREE.MathUtils.lerp(1.0, 0.1, tSeg);
     const r = headColor.r * fade;
     const g = headColor.g * fade;
@@ -194,8 +203,8 @@ export function updateTrail(deltaFrames, score) {
     col[(idx + 1) * 3 + 2] = b;
   }
 
+  // Mark the geometry as needing an update
   trailGeometry.attributes.position.needsUpdate = true;
   trailGeometry.attributes.color.needsUpdate = true;
   trailGeometry.computeBoundingSphere();
 }
-

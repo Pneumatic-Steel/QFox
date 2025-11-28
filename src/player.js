@@ -5,6 +5,7 @@ import {
   ORB_REWARD_SCORE_STEP,
   ORB_REWARD_AMOUNT,
 } from "./constants.js";
+import { setTrailFox } from "./trails.js";  // Import the setTrailFox function
 
 export const player = {
   score: 0,
@@ -29,7 +30,7 @@ export const player = {
 
 export function initPlayerFromStorage() {
   try {
-    // Load high score locally so it works even if Firebase is unavailable
+    // Load high score locally
     const hsStr = localStorage.getItem(STORAGE_KEYS.HIGH_SCORE);
     if (hsStr != null) {
       player.highScore = parseInt(hsStr, 10) || 0;
@@ -84,7 +85,7 @@ export function resetPlayerForRun() {
   player.score = 0;
   player.laneIndex = 1;
 
-  // reset run-specific powerups
+  // Reset run-specific power-ups
   player.shieldActive = false;
   player.shieldUntil = 0;
   player.multiplierActive = false;
@@ -134,9 +135,16 @@ export function buyTrail(trailId) {
   return true;
 }
 
+// Equip a new trail and ensure that it is rendered immediately
 export function equipTrail(trailId) {
-  if (!player.trailUnlocks[trailId]) return false;
-  player.equippedTrailId = trailId;
-  savePlayerToStorage();
+  if (!player.trailUnlocks[trailId]) return false;  // Check if the trail is unlocked
+  player.equippedTrailId = trailId;  // Set the equipped trail ID
+  savePlayerToStorage();  // Save equipped trail to localStorage
+
+  // Update the trail in the scene after equipping the new trail
+  if (foxPlayer) {
+    setTrailFox(foxPlayer);  // Ensure that the trail is rendered based on the equipped trail
+  }
+
   return true;
 }

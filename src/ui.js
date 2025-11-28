@@ -1,6 +1,7 @@
-import { GAME_STATE, TRAIL_SHOP } from "./constants.js";
+import { TRAIL_SHOP } from "./constants.js";
 import { player, equipTrail, buyTrail } from "./player.js";
 
+// Your existing UI structure
 export const UI = {
   state: GAME_STATE.MENU,
 
@@ -35,8 +36,13 @@ export const UI = {
     pendingScore: 0,
   },
 
-  trailListContainer: null,
+  trailListContainer: null, // where trail list will appear
 };
+
+// Ensure DOM is fully loaded before initializing UI
+document.addEventListener("DOMContentLoaded", () => {
+  initUI();
+});
 
 export function initUI() {
   // Screens
@@ -115,10 +121,7 @@ export function initUI() {
   updateTrailList();
 }
 
-// -------------------------------------------------------------
-// STATE TRANSITIONS
-// -------------------------------------------------------------
-
+// State transitions for different screens
 export function showMenu() {
   UI.state = GAME_STATE.MENU;
 
@@ -144,7 +147,6 @@ export function showGame() {
 }
 
 export function showGameOver(finalScore) {
-  // FIXED — no () here
   UI.state = GAME_STATE.GAME_OVER;
 
   if (UI.labels.finalScore)
@@ -194,10 +196,7 @@ export function hideTrails() {
   UI.state = GAME_STATE.MENU;
 }
 
-// -------------------------------------------------------------
-// SCORE & ORBS & HIGHSCORE LABELS
-// -------------------------------------------------------------
-
+// Score and high score updates
 export function updateScoreLabel(score) {
   if (UI.labels.score)
     UI.labels.score.textContent = `Score: ${score}`;
@@ -213,10 +212,7 @@ export function updateOrbsLabel() {
     UI.labels.orbs.textContent = `Orbs: ${player.orbs}`;
 }
 
-// -------------------------------------------------------------
-// TRAIL SHOP UI
-// -------------------------------------------------------------
-
+// Trail shop update
 export function updateTrailList() {
   if (!UI.trailListContainer) return;
 

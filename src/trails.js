@@ -151,7 +151,7 @@ export function updateTrail(deltaFrames, score) {
     const pNext = trailPoints[i + 1];
 
     const dir = new THREE.Vector3().subVectors(pNext, p);
-    let side = new THREE.Vector3().crossVectors(dir, new THREE.Vector3(0, 1, 0));
+    let side = new THREE.Vector3().crossVectors(new THREE.Vector3(0, 1, 0), dir);
 
     if (side.lengthSq() < 1e-6) side.set(1, 0, 0);
     side.normalize();
@@ -198,3 +198,4 @@ export function updateTrail(deltaFrames, score) {
   trailGeometry.attributes.color.needsUpdate = true;
   trailGeometry.computeBoundingSphere();
 }
+

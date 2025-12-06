@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Midnight Confections</title>
+
+<style>
+/* RESET */
+* { margin:0; padding:0; box-sizing:border-box; }
+
+body {
+  background:#020010;
+  font-family:system-ui, sans-serif;
+  overflow-x:hidden;
+  color:#ffe6ff;
+}
+
+/* ================== COSMIC BACKGROUND ================== */
+body::before {
+  content:"";
+  position:fixed;
+  inset:-20%;
+  background:
+    radial-gradient(circle at 20% 20%, #ff00ff22, transparent 70%),
+    radial-gradient(circle at 80% 40%, #00ffff22, transparent 70%),
+    radial-gradient(circle at 40% 90%, #9400d322, transparent 70%),
+    #020010;
+  filter:blur(40px);
+  animation:nebula 40s ease-in-out infinite;
+  z-index:-3;
+}
+
+@keyframes nebula {
+  0% {transform:translate(-30px,-10px) scale(1.05);} 
+  50%{transform:translate(30px,20px) scale(1.1);} 
+  100%{transform:translate(-30px,-10px) scale(1.05);} 
+}
+
+/* ================== FLOATING PARTICLES ================== */
+.particle {
+  position:fixed;
+  width:4px; height:4px;
+  background:radial-gradient(circle, white, transparent);
+  border-radius:50%;
+  opacity:.6;
+  animation:floatUp linear infinite;
+  z-index:-2;
+}
+
+@keyframes floatUp {
+  0% {transform:translateY(0); opacity:0;}
+  10%{opacity:.8;}
+  80%{opacity:.8;}
+  100%{transform:translateY(-120vh); opacity:0;}
+}
+
+/* ================== SHOOTING STARS ================== */
+.star {
+  position:fixed;
+  width:2px; height:120px;
+  background:linear-gradient(to bottom, white, transparent);
+  transform:rotate(45deg);
+  opacity:.9;
+  animation:shoot 2s ease-out forwards;
+  z-index:-1;
+}
+@keyframes shoot {
+  0%{opacity:1; transform:translate(0,0) rotate(45deg);} 
+  100%{opacity:0; transform:translate(350px,350px) rotate(45deg);} 
+}
+
+/* ================== PAGE CONTENT ================== */
+.page {max-width:900px; margin:40px auto; padding-bottom:80px;}
+
+.header {text-align:center; margin-bottom:40px;}
+.header h1 {
+  font-size:2.4rem;
+  letter-spacing:.1em;
+  color:#ffd6ff;
+  text-shadow:0 0 15px #ff00ff, 0 0 25px #00ffff;
+}
+
+/* ================== RECIPES ================== */
+.recipes {display:flex; flex-direction:column; gap:60px;}
+
+.recipe-row {
+  display:flex;
+  max-width:650px;
+  margin:auto;
+}
+.recipe-row.left {justify-content:flex-start; padding-left:40px;}
+.recipe-row.right {justify-content:flex-end; padding-right:40px;}
+
+.recipe-card {text-align:center;}
+
+.plate {
+  width:160px; height:160px;
+  border-radius:999px;
+  overflow:hidden;
+  background:radial-gradient(circle, #1a0f22, #06000c);
+  cursor:pointer;
+  box-shadow:0 0 18px #ff00ff55, 0 0 28px #00ffff44;
+  animation:bob 5.2s ease-in-out infinite;
+  transition:transform .25s, filter .25s, box-shadow .25s;
+}
+
+@keyframes bob {
+  0%{transform:translateY(0);} 
+  50%{transform:translateY(-12px);} 
+  100%{transform:translateY(0);} 
+}
+
+.plate:hover {
+  transform:translateY(-6px) scale(1.07);
+  filter:brightness(1.2);
+  box-shadow:0 0 22px #ff00ffff, 0 0 40px #00ffffff;
+}
+
+.recipe-title {
+  margin-top:8px;
+  color:#ffb3ff;
+  font-size:.85rem;
+  text-shadow:0 0 6px #ff00ff;
+}
+
+/* ================== MODAL ================== */
+.modal-backdrop {
+  position:fixed; inset:0;
+  background:rgba(0,0,0,.75);
+  display:none;
+  align-items:center;
+  justify-content:center;
+  z-index:50;
+}
+
+.modal {
+  width:90%; max-width:520px;
+  background:radial-gradient(circle, #260b36, #05000f);
+  padding:25px;
+  border-radius:18px;
+  box-shadow:0 0 30px #ff00ffbb;
+  border:1px solid #ffffff22;
+  position:relative;
+}
+
+.modal-close {
+  position:absolute; top:6px; right:12px;
+  font-size:1.4rem;
+  background:none; border:none;
+  color:#ff99ff;
+  cursor:pointer;
+}
+
+/* ================== SKULL ORACLE ================== */
+.skull {
+  position:fixed;
+  width:110px;
+  z-index:40;
+  pointer-events:none;
+  transform-origin:center center;
+}
+
+.skull img {
+  width:100%;
+  filter:
+    drop-shadow(0 0 10px #ff00ffaa)
+    drop-shadow(0 0 20px #00ffffff);
+}
+
+.skull.alert img {
+  filter:
+    brightness(1.25)
+    drop-shadow(0 0 20px #ff00ffff)
+    drop-shadow(0 0 30px #00ffffff);
+}
+</style>
+</head>
+<body>
+
+<!-- ================== ORACLE ================== -->
+<div class="skull" id="oracle">
+  <img src="skull-cat.png" id="oracleImg" alt="Oracle">
+</div>
+
+<div class="page">
+  <div class="header">
+    <h1>Midnight Confections</h1>
+    <p>Sweet • Spooky • Sentient</p>
+  </div>
+
+  <div class="recipes" id="recipesSource">
+
+    <div class="recipe-item" data-title="Lunar Velvet Cupcakes" data-text="Soft red velvet cupcakes crowned with cosmic frosting.">
+      <img src="https://via.placeholder.com/400">
+    </div>
+
+    <div class="recipe-item" data-title="Shadowberry Swirl Cookies" data-text="Spiral cookies filled with shadowberry jam.">
+      <img src="https://via.placeholder.com/400">
+    </div>
+
+    <div class="recipe-item" data-title="Cosmic Frost Brownies" data-text="Dense brownies with glowing galaxy icing.">
+      <img src="https://via.placeholder.com/400">
+    </div>
+
+    <div class="recipe-item" data-title="Nightfall Pudding Cups" data-text="Layered galaxy pudding with midnight drizzle.">
+      <img src="https://via.placeholder.com/400">
+    </div>
+
+  </div>
+</div>
+
+<!-- ================== MODAL ================== -->
+<div class="modal-backdrop" id="modalBackdrop">
+  <div class="modal">
+    <button class="modal-close" id="modalClose">✕</button>
+    <h2 id="modalTitle"></h2>
+    <p id="modalText"></p>
+  </div>
+</div>
+
+<script>
+/* ================== BACKGROUND PARTICLES ================== */
+for(let i=0;i<40;i++){
+  const p=document.createElement("div");
+  p.className="particle";
+  p.style.left=Math.random()*100+"vw";
+  p.style.top=Math.random()*100+"vh";
+  p.style.animationDuration=10+Math.random()*20+"s";
+  p.style.animationDelay=-Math.random()*20+"s";
+  document.body.appendChild(p);
+}
+
+/* SHOOTING STARS */
+setInterval(()=>{
+  const s=document.createElement("div");
+  s.className="star";
+  s.style.left=Math.random()*80+"vw";
+  s.style.top=Math.random()*20+"vh";
+  document.body.appendChild(s);
+  setTimeout(()=>s.remove(),2000);
+},3500);
+
+/* ================== RECIPE SETUP ================== */
+const src=document.getElementById("recipesSource");
+const items=Array.from(src.querySelectorAll(".recipe-item"));
+src.innerHTML="";
+
+items.forEach((item,i)=>{
+  const row=document.createElement("div");
+  row.className="recipe-row "+(i%2===0?"left":"right");
+
+  const card=document.createElement("div");
+  card.className="recipe-card";
+
+  const plate=document.createElement("div");
+  plate.className="plate";
+  plate.dataset.title=item.dataset.title;
+  plate.dataset.text=item.dataset.text;
+
+  const img=document.createElement("img");
+  img.src=item.querySelector("img").src;
+  plate.appendChild(img);
+
+  const title=document.createElement("div");
+  title.className="recipe-title";
+  title.textContent=item.dataset.title;
+
+  card.appendChild(plate);
+  card.appendChild(title);
+  row.appendChild(card);
+  src.appendChild(row);
+});
+
+/* ================== MODAL ================== */
+const modalBack=document.getElementById("modalBackdrop");
+const modalTitle=document.getElementById("modalTitle");
+const modalText=document.getElementById("modalText");
+
+document.querySelectorAll(".plate").forEach(p=>{
+  p.addEventListener("click",()=>{
+    modalTitle.textContent=p.dataset.title;
+    modalText.textContent=p.dataset.text;
+    modalBack.style.display="flex";
+  });
+});
+
+document.getElementById("modalClose").onclick=()=>modalBack.style.display="none";
+modalBack.onclick=(e)=>{if(e.target===modalBack)modalBack.style.display="none";};
+
+/* ============================================================
+   FINAL SKULL ORACLE BEHAVIOR:
+   ✔ Natural ±35° tilt
+   ✔ Correct tilt direction on BOTH sides
+   ✔ Horizontal flip for facing
+   ✔ No upside-down rotation EVER
+   ✔ Smooth wandering
+   ✔ Base PNG tilt corrected
+   ============================================================ */
+const oracle = document.getElementById("oracle");
+const oracleImg = document.getElementById("oracleImg");
+
+let ox = window.innerWidth * 0.5;
+let oy = window.innerHeight * 0.35;
+
+let dx = (Math.random()*1.2)-0.6;
+let dy = (Math.random()*1.2)-0.4;
+
+let mouseX = ox;
+let mouseY = oy;
+
+window.addEventListener("mousemove", (e)=>{
+  mouseX = e.clientX;
+  mouseY = e.clientY;
+});
+
+/* wandering drift */
+setInterval(()=>{
+  const toMouseX = mouseX - ox;
+  const toMouseY = mouseY - oy;
+  const dist = Math.hypot(toMouseX,toMouseY)||1;
+
+  const biasX = (toMouseX/dist)*0.12;
+  const biasY = (toMouseY/dist)*0.12;
+
+  dx = dx*0.6 + (Math.random()*0.8 - 0.4) + biasX*0.15;
+  dy = dy*0.6 + (Math.random()*0.8 - 0.4) + biasY*0.15 - 0.04;
+
+  const speed = Math.hypot(dx,dy);
+  const maxSpeed = 1.3;
+  if(speed>maxSpeed){
+    dx = dx/speed*maxSpeed;
+    dy = dy/speed*maxSpeed;
+  }
+}, 2500);
+
+function animate(){
+  ox += dx;
+  oy += dy;
+
+  if(ox < 20 || ox > window.innerWidth-20) dx *= -1;
+  if(oy < 20 || oy > window.innerHeight-80) dy *= -0.8;
+
+  /* ---------------- NATURAL HEAD TURN ---------------- */
+  let dxm = mouseX - ox;
+  let dym = mouseY - oy;
+
+  /* flip left/right */
+  let flip = dxm < 0 ? 1 : -1;
+  oracleImg.style.transform = `scaleX(${flip})`;
+
+  /* vertical tilt -- invert Y so looking matches cursor height */
+  let rawTilt = Math.atan2(-dym, Math.abs(dxm)) * 180 / Math.PI;
+
+  /* limit tilt */
+  let tilt = Math.max(-35, Math.min(35, rawTilt));
+
+  /* FIX: invert tilt when flipped */
+  if(flip === -1){
+    tilt = -tilt;
+  }
+
+  /* fix skull's natural downward angle */
+  tilt += 5;
+
+  oracle.style.transform = `translate(${ox}px, ${oy}px) rotate(${tilt}deg)`;
+
+  requestAnimationFrame(animate);
+}
+animate();
+
+/* glow on recipe hover */
+document.querySelectorAll(".plate").forEach(p=>{
+  p.addEventListener("mouseenter",()=>oracle.classList.add("alert"));
+  p.addEventListener("mouseleave",()=>oracle.classList.remove("alert"));
+});
+</script>
+
+</body>
+</html>
